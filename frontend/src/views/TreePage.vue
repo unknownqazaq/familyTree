@@ -105,7 +105,7 @@ function navigateToTree(nodeId) {
 
 <style scoped>
 .tree-controls {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .controls-row {
@@ -123,13 +123,14 @@ function navigateToTree(nodeId) {
 }
 
 .person-detail {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .loading {
   text-align: center;
   padding: 40px;
-  color: #888;
+  color: #64748b;
+  font-weight: 600;
 }
 
 .empty-state {
@@ -139,7 +140,7 @@ function navigateToTree(nodeId) {
 
 .empty-state p {
   margin-bottom: 16px;
-  color: #888;
+  color: #64748b;
 }
 
 .empty-state a {
@@ -147,6 +148,6 @@ function navigateToTree(nodeId) {
   padding: 10px 20px;
   color: white;
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: 10px;
 }
 </style>

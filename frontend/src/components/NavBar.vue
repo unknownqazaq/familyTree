@@ -37,9 +37,12 @@ function handleLogout() {
 
 <style scoped>
 .navbar {
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.82);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.65);
+  backdrop-filter: blur(12px);
 }
 
 .navbar-inner {
@@ -48,13 +51,15 @@ function handleLogout() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
+  min-height: 68px;
+  padding: 0 20px;
 }
 
 .navbar-brand {
-  font-size: 20px;
-  font-weight: 700;
-  color: #2c3e50;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1e1b4b;
 }
 
 .navbar-brand:hover {
@@ -64,21 +69,50 @@ function handleLogout() {
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .navbar-links a {
-  color: #555;
+  color: #475569;
   font-size: 14px;
+  font-weight: 600;
+  padding: 7px 10px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.navbar-links a:hover {
+  background: #eef2ff;
+  color: #3730a3;
 }
 
 .navbar-links a.router-link-active {
-  color: #3498db;
-  font-weight: 600;
+  color: #3730a3;
+  background: rgba(99, 102, 241, 0.14);
 }
 
 .user-email {
   font-size: 13px;
-  color: #888;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+
+@media (max-width: 900px) {
+  .navbar-inner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 20px;
+  }
+
+  .navbar-links {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 </style>
