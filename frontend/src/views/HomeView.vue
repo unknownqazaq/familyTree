@@ -1,6 +1,7 @@
 <template>
   <div class="home">
     <div class="hero card">
+      <p class="hero-kicker">Welcome to your digital ancestry space</p>
       <h1>Family Tree</h1>
       <p>Explore and manage your family history. Add family members, build your tree, and discover connections.</p>
 
@@ -35,36 +36,66 @@ const authStore = useAuthStore()
 </script>
 
 <style scoped>
+.home {
+  display: grid;
+  gap: 20px;
+}
+
 .hero {
   text-align: center;
-  padding: 48px 24px;
-  margin-bottom: 32px;
+  padding: 56px 24px;
+  margin-bottom: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top center, rgba(79, 70, 229, 0.12), transparent 55%);
+  pointer-events: none;
+}
+
+.hero > * {
+  position: relative;
+}
+
+.hero-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6366f1;
+  margin-bottom: 10px;
 }
 
 .hero h1 {
-  font-size: 36px;
+  font-size: clamp(34px, 5vw, 48px);
   margin-bottom: 12px;
-  color: #2c3e50;
+  color: #0f172a;
+  letter-spacing: -0.03em;
 }
 
 .hero p {
-  font-size: 16px;
-  color: #666;
-  max-width: 500px;
-  margin: 0 auto 24px;
+  font-size: 17px;
+  color: #475569;
+  max-width: 640px;
+  margin: 0 auto 28px;
 }
 
 .hero-actions {
   display: flex;
   justify-content: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .hero-actions a {
   display: inline-block;
-  padding: 10px 24px;
-  border-radius: 6px;
-  font-weight: 600;
+  padding: 11px 26px;
+  border-radius: 12px;
+  font-weight: 700;
   color: white;
   text-decoration: none;
 }
@@ -75,13 +106,22 @@ const authStore = useAuthStore()
   gap: 16px;
 }
 
+.feature {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 44px rgba(15, 23, 42, 0.11);
+}
+
 .feature h3 {
   margin-bottom: 8px;
-  color: #2c3e50;
+  color: #0f172a;
 }
 
 .feature p {
-  color: #666;
+  color: #475569;
   font-size: 14px;
 }
 </style>
