@@ -49,14 +49,14 @@ const childMap = computed(() => {
 })
 
 function initializeCollapsedState() {
-  const hasParent = new Set(props.persons.filter((person) => person.parent_id != null).map((person) => person.id))
   const next = new Set()
+  const hasParent = new Set(props.persons.filter((person) => person.parent_id != null).map((person) => person.id))
 
   props.persons.forEach((person) => {
-    const hasChildren = (childMap.value.get(person.id) ?? []).length > 0
     const isRoot = !hasParent.has(person.id)
+    const nodeHasChildren = (childMap.value.get(person.id) ?? []).length > 0
 
-    if (hasChildren && !isRoot) {
+    if (nodeHasChildren && !isRoot) {
       next.add(person.id)
     }
   })
@@ -83,6 +83,7 @@ function hasChildren(nodeId) {
 
 function nodeStyles(person) {
   const isPrivate = person.access !== 'public'
+
   return {
     background: isPrivate ? '#fef9c3' : '#e2e8f0',
     border: isPrivate ? '#f59e0b' : '#94a3b8',
@@ -171,6 +172,7 @@ function renderNetwork() {
         type: 'curvedCW',
         roundness: 0.14,
       },
+      width: 1.5,
     },
   }
 
