@@ -84,12 +84,9 @@ function hasChildren(nodeId) {
 
 function nodeStyles(person) {
   const isPrivate = person.access !== 'public'
-  const isCollapsed = collapsedNodeIds.value.has(person.id)
-
   return {
     background: isPrivate ? '#fef3c7' : '#e0f2fe',
     border: isPrivate ? '#f59e0b' : '#38bdf8',
-    badgeColor: isCollapsed ? '#64748b' : '#4f46e5',
   }
 }
 
@@ -161,7 +158,7 @@ function renderNetwork() {
       dragNodes: false,
       dragView: true,
       zoomView: true,
-      navigationButtons: true,
+      navigationButtons: false,
       keyboard: true,
     },
     nodes: {
