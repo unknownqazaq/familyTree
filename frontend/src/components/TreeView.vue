@@ -82,23 +82,27 @@ function isNodeVisible(personId) {
 function buildGraph(persons) {
   const nodes = new DataSet(
     persons.map((p) => {
-      const hasChildren = (childMap.value.get(p.id) ?? []).length > 0
-      const isCollapsed = collapsedNodeIds.value.has(p.id)
-
       return {
         id: p.id,
-        label: hasChildren ? `${p.name}\n${isCollapsed ? '' : ''}` : p.name,
+        label: p.name,
         shape: 'box',
         hidden: !isNodeVisible(p.id),
         color: {
-          background: p.access === 'public' ? '#dcfce7' : '#fef9c3',
-          border: p.access === 'public' ? '#16a34a' : '#ca8a04',
+          background: p.access === 'public' ? '#e0f2fe' : '#fef3c7',
+          border: p.access === 'public' ? '#0284c7' : '#d97706',
           highlight: {
-            background: '#e0e7ff',
-            border: '#4f46e5',
+            background: '#ede9fe',
+            border: '#7c3aed',
           },
         },
-        font: { size: 14, face: 'Inter, Segoe UI, Roboto, sans-serif' },
+        font: {
+          size: 14,
+          face: 'Inter, Segoe UI, Roboto, sans-serif',
+          color: '#0f172a',
+          bold: {
+            color: '#0f172a',
+          },
+        },
       }
     })
   )
@@ -127,10 +131,10 @@ function renderNetwork() {
   const options = {
     layout: {
       hierarchical: {
-        direction: 'UD',
+        direction: 'LR',
         sortMethod: 'directed',
         levelSeparation: 110,
-        nodeSpacing: 170,
+        nodeSpacing: 130,
         treeSpacing: 190,
       },
     },
@@ -143,7 +147,7 @@ function renderNetwork() {
     nodes: {
       margin: { top: 10, bottom: 10, left: 16, right: 16 },
       borderWidth: 2,
-      borderRadius: 12,
+      borderRadius: 18,
       shadow: {
         enabled: true,
         color: 'rgba(15, 23, 42, 0.15)',
@@ -155,7 +159,8 @@ function renderNetwork() {
     edges: {
       smooth: {
         type: 'cubicBezier',
-        forceDirection: 'vertical',
+        forceDirection: 'horizontal',
+        roundness: 0.4,
       },
       width: 2,
     },
@@ -232,6 +237,9 @@ onUnmounted(() => {
   height: 640px;
   border: 1px solid #dbe3ef;
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.25) 1px, transparent 0),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+  background-size: 20px 20px, 100% 100%;
 }
 </style>
