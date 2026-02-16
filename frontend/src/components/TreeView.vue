@@ -1,8 +1,8 @@
 <template>
   <div class="tree-view card">
     <div class="tree-header">
-      <h3>{{ t('tree.familyGraph') }}</h3>
-      <p>{{ t('tree.expandHint') }}</p>
+      <h3>Family Graph</h3>
+      <p>Нажмите на узел, чтобы раскрыть или свернуть ветки.</p>
     </div>
     <div ref="networkContainer" class="network-container"></div>
   </div>
@@ -10,7 +10,6 @@
 
 <script setup>
 import { computed, ref, onMounted, watch, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
 import { Network } from 'vis-network'
 import { DataSet } from 'vis-data'
 
@@ -19,7 +18,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['node-click'])
-const { t } = useI18n()
 
 const networkContainer = ref(null)
 let network = null
@@ -87,15 +85,15 @@ function buildGraph(persons) {
 
       return {
         id: p.id,
-        label: hasChildren ? `${p.name}\n${isCollapsed ? '' : ''}` : p.name,
+        label: hasChildren ? `${p.name}\n${isCollapsed ? '▶' : '▼'}` : p.name,
         shape: 'box',
         hidden: !isNodeVisible(p.id),
         color: {
-          background: p.access === 'public' ? '#e6f6ec' : '#fff6d6',
-          border: p.access === 'public' ? '#2fb574' : '#e6b94b',
+          background: p.access === 'public' ? '#dcfce7' : '#fef9c3',
+          border: p.access === 'public' ? '#16a34a' : '#ca8a04',
           highlight: {
-            background: '#e7ecff',
-            border: '#5b62d6',
+            background: '#e0e7ff',
+            border: '#4f46e5',
           },
         },
         font: { size: 14, face: 'Inter, Segoe UI, Roboto, sans-serif' },
@@ -110,8 +108,9 @@ function buildGraph(persons) {
         id: `${p.parent_id}-${p.id}`,
         from: p.parent_id,
         to: p.id,
+        arrows: 'to',
         hidden: !isNodeVisible(p.id),
-        color: { color: '#9aa4b2', highlight: '#5b62d6' },
+        color: { color: '#94a3b8', highlight: '#4f46e5' },
       }))
   )
 
@@ -126,11 +125,11 @@ function renderNetwork() {
   const options = {
     layout: {
       hierarchical: {
-        direction: 'LR',
+        direction: 'UD',
         sortMethod: 'directed',
-        levelSeparation: 140,
-        nodeSpacing: 220,
-        treeSpacing: 220,
+        levelSeparation: 110,
+        nodeSpacing: 170,
+        treeSpacing: 190,
       },
     },
     physics: false,
@@ -138,27 +137,24 @@ function renderNetwork() {
       hover: true,
       navigationButtons: true,
       keyboard: true,
-      dragNodes: true,
     },
     nodes: {
-      margin: { top: 12, bottom: 12, left: 18, right: 18 },
-      borderWidth: 1.5,
-      borderRadius: 16,
+      margin: { top: 10, bottom: 10, left: 16, right: 16 },
+      borderWidth: 2,
       shadow: {
         enabled: true,
-        color: 'rgba(15, 23, 42, 0.12)',
-        size: 16,
+        color: 'rgba(15, 23, 42, 0.15)',
+        size: 12,
         x: 0,
-        y: 8,
+        y: 6,
       },
     },
     edges: {
       smooth: {
         type: 'cubicBezier',
-        forceDirection: 'horizontal',
-        roundness: 0.6,
+        forceDirection: 'vertical',
       },
-      width: 1.6,
+      width: 2,
     },
   }
 
@@ -167,8 +163,6 @@ function renderNetwork() {
   }
 
   network = new Network(networkContainer.value, { nodes, edges }, options)
-
-  animateLayout()
 
   network.on('click', (params) => {
     if (params.nodes.length > 0) {
@@ -186,36 +180,6 @@ function renderNetwork() {
 
       emit('node-click', nodeId)
     }
-  })
-}
-
-function animateLayout() {
-  if (!network) return
-
-  network.setOptions({
-    physics: {
-      enabled: true,
-      solver: 'hierarchicalRepulsion',
-      hierarchicalRepulsion: {
-        nodeDistance: 180,
-        centralGravity: 0.1,
-        springLength: 140,
-        springConstant: 0.06,
-      },
-      stabilization: {
-        iterations: 60,
-      },
-    },
-  })
-
-  network.stabilize(60)
-
-  network.once('stabilized', () => {
-    network.setOptions({
-      physics: {
-        enabled: false,
-      },
-    })
   })
 }
 
@@ -244,9 +208,6 @@ onUnmounted(() => {
 .tree-view {
   width: 100%;
   height: 100%;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(236, 242, 255, 0.92));
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
 }
 
 .tree-header {
@@ -266,11 +227,8 @@ onUnmounted(() => {
 .network-container {
   width: 100%;
   height: 640px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 18px;
-  background:
-    radial-gradient(circle at top left, rgba(226, 232, 255, 0.7), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(224, 242, 254, 0.6), transparent 45%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
 }
 </style>

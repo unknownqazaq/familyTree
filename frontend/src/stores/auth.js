@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../api'
+import { safeGetItem, safeSetItem, safeRemoveItem } from '../utils/storage'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
-  const token = ref(localStorage.getItem('access_token') || null)
+  const token = ref(safeGetItem('access_token') || null)
 
   const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
@@ -13,8 +14,8 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email, password) {
     const { data } = await api.post('/auth/login', { email, password })
     token.value = data.access_token
-    localStorage.setItem('access_token', data.access_token)
-    localStorage.setItem('refresh_token', data.refresh_token)
+    safeSetItem('access_token', data.access_token)
+    safeSetItem('refresh_token', data.refresh_token)
     await fetchUser()
   }
 
@@ -50,8 +51,8 @@ export const useAuthStore = defineStore('auth', () => {
   function logout() {
     user.value = null
     token.value = null
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
+    safeRemoveItem('access_token')
+    safeRemoveItem('refresh_token')
   }
 
   // Initialize: fetch user if token exists

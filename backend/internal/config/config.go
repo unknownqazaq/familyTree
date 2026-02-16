@@ -14,6 +14,7 @@ type Config struct {
 	DBUser     string
 	DBPassword string
 	DBName     string
+	DBSSLMode  string
 	DBDSN      string
 
 	JWTSecret       string
@@ -42,15 +43,16 @@ func Load() (*Config, error) {
 		DBUser:          getEnv("POSTGRES_USER", "familytree"),
 		DBPassword:      getEnv("POSTGRES_PASSWORD", "familytree_secret_2024"),
 		DBName:          getEnv("POSTGRES_DB", "familytree"),
+		DBSSLMode:       getEnv("DB_SSLMODE", "disable"),
 		JWTSecret:       getEnv("JWT_SECRET", "default-secret-change-me"),
 		JWTExpiry:       jwtExpiry,
 		JWTRefreshExpiry: jwtRefreshExpiry,
-		ServerPort:      getEnv("SERVER_PORT", "8080"),
+		ServerPort:      getEnv("PORT", getEnv("SERVER_PORT", "8080")),
 	}
 
 	cfg.DBDSN = fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName,
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBSSLMode,
 	)
 
 	return cfg, nil

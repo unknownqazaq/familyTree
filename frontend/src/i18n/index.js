@@ -1,4 +1,5 @@
-import { createI18n } from 'vue-i18n'
+﻿import { createI18n } from 'vue-i18n'
+import { safeGetItem, safeSetItem } from '../utils/storage'
 
 export const LOCALE_STORAGE_KEY = 'app_locale'
 
@@ -43,7 +44,7 @@ const messages = {
       loginTitle: 'Login',
       registerTitle: 'Register',
       emailLabel: 'Email',
-      emailPlaceholder: 'your@email.com',
+      emailPlaceholder: 'your_email.com',
       passwordLabel: 'Password',
       passwordPlaceholder: 'Password',
       login: 'Login',
@@ -207,7 +208,7 @@ const messages = {
       loginTitle: 'Вход',
       registerTitle: 'Регистрация',
       emailLabel: 'Email',
-      emailPlaceholder: 'ваш@email.com',
+      emailPlaceholder: 'ваш_email.com',
       passwordLabel: 'Пароль',
       passwordPlaceholder: 'Пароль',
       login: 'Войти',
@@ -371,7 +372,7 @@ const messages = {
       loginTitle: 'Кіру',
       registerTitle: 'Тіркелу',
       emailLabel: 'Email',
-      emailPlaceholder: 'email@example.com',
+      emailPlaceholder: 'email_example.com',
       passwordLabel: 'Құпиясөз',
       passwordPlaceholder: 'Құпиясөз',
       login: 'Кіру',
@@ -497,7 +498,32 @@ const messages = {
   },
 }
 
-const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY)
+function decodeMojibakeString(input) {
+  if (typeof input !== 'string') return input
+  if (!/[\u00D0\u00D1\u00D2\u00D3]/.test(input)) return input
+  try {
+    const bytes = Uint8Array.from(input, (char) => char.charCodeAt(0))
+    return new TextDecoder('utf-8').decode(bytes)
+  } catch {
+    return input
+  }
+}
+
+function decodeMojibakeDeep(value) {
+  if (Array.isArray(value)) return value.map(decodeMojibakeDeep)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, nested]) => [key, decodeMojibakeDeep(nested)]))
+  }
+  return decodeMojibakeString(value)
+}
+
+const normalizedMessages = {
+  ...messages,
+  ru: decodeMojibakeDeep(messages.ru),
+  kk: decodeMojibakeDeep(messages.kk),
+}
+
+const savedLocale = safeGetItem(LOCALE_STORAGE_KEY)
 const defaultLocale = 'ru'
 const locale = savedLocale || defaultLocale
 
@@ -505,12 +531,16 @@ const i18n = createI18n({
   legacy: false,
   locale,
   fallbackLocale: 'en',
-  messages,
+  messages: normalizedMessages,
 })
 
 export function setLocale(nextLocale) {
   i18n.global.locale.value = nextLocale
-  localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale)
+  safeSetItem(LOCALE_STORAGE_KEY, nextLocale)
 }
 
 export default i18n
+
+
+
+

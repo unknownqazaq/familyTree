@@ -1,0 +1,57 @@
+databases:
+  - name: familytree-db
+    databaseName: familytree
+    user: familytree
+    plan: free
+
+services:
+  - type: web
+    name: familytree-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    autoDeploy: true
+    healthCheckPath: /api/tree
+    envVars:
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: familytree-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: familytree-db
+          property: port
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: familytree-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: familytree-db
+          property: password
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: familytree-db
+          property: database
+      - key: DB_SSLMODE
+        value: require
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRY
+        value: 15m
+      - key: JWT_REFRESH_EXPIRY
+        value: 168h
+
+  - type: static
+    name: familytree-frontend
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://familytree-backend.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
