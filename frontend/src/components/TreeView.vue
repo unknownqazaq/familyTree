@@ -50,13 +50,17 @@ const childMap = computed(() => {
   return map
 })
 
+const rootIds = computed(() => {
+  const hasParent = new Set(props.persons.filter((p) => p.parent_id != null).map((p) => p.id))
+  return new Set(props.persons.filter((p) => !hasParent.has(p.id)).map((p) => p.id))
+})
+
 function initializeCollapsedState() {
   const next = new Set()
-  const hasParent = new Set(props.persons.filter((p) => p.parent_id != null).map((p) => p.id))
 
   props.persons.forEach((person) => {
     const hasChildren = (childMap.value.get(person.id) ?? []).length > 0
-    const isRoot = !hasParent.has(person.id)
+    const isRoot = rootIds.value.has(person.id)
 
     if (hasChildren && !isRoot) {
       next.add(person.id)
@@ -79,40 +83,70 @@ function isNodeVisible(personId) {
   return true
 }
 
+function getNodeStyle(person) {
+  const isRoot = rootIds.value.has(person.id)
+  const isPublic = person.access === 'public'
+
+  if (isRoot) {
+    return {
+      background: '#ddd6fe',
+      border: '#7c3aed',
+      highlight: { background: '#c4b5fd', border: '#6d28d9' },
+    }
+  }
+
+  if (isPublic) {
+    return {
+      background: '#e0f2fe',
+      border: '#0284c7',
+      highlight: { background: '#bae6fd', border: '#0369a1' },
+    }
+  }
+
+  return {
+    background: '#fef3c7',
+    border: '#d97706',
+    highlight: { background: '#fde68a', border: '#b45309' },
+  }
+}
+
+function buildNodeLabel(person) {
+  const hasChildren = (childMap.value.get(person.id) ?? []).length > 0
+  const isCollapsed = collapsedNodeIds.value.has(person.id)
+
+  if (!hasChildren) {
+    return person.name
+  }
+
+  const marker = isCollapsed ? '▸' : '▾'
+  return `${marker} ${person.name}`
+}
+
 function buildGraph(persons) {
   const nodes = new DataSet(
-    persons.map((p) => {
-      const hasChildren = (childMap.value.get(p.id) ?? []).length > 0
-      const isCollapsed = collapsedNodeIds.value.has(p.id)
-
-      return {
-        id: p.id,
-        label: hasChildren ? `${p.name}\n${isCollapsed ? '' : ''}` : p.name,
-        shape: 'box',
-        hidden: !isNodeVisible(p.id),
-        color: {
-          background: p.access === 'public' ? '#dcfce7' : '#fef9c3',
-          border: p.access === 'public' ? '#16a34a' : '#ca8a04',
-          highlight: {
-            background: '#e0e7ff',
-            border: '#4f46e5',
-          },
-        },
-        font: { size: 14, face: 'Inter, Segoe UI, Roboto, sans-serif' },
-      }
-    })
+    persons.map((person) => ({
+      id: person.id,
+      label: buildNodeLabel(person),
+      shape: 'box',
+      hidden: !isNodeVisible(person.id),
+      color: getNodeStyle(person),
+      font: {
+        size: 14,
+        face: 'Inter, Segoe UI, Roboto, sans-serif',
+        color: '#0f172a',
+      },
+    }))
   )
 
   const edges = new DataSet(
     persons
-      .filter((p) => p.parent_id != null)
-      .map((p) => ({
-        id: `${p.parent_id}-${p.id}`,
-        from: p.parent_id,
-        to: p.id,
-        arrows: 'to',
-        hidden: !isNodeVisible(p.id),
-        color: { color: '#94a3b8', highlight: '#4f46e5' },
+      .filter((person) => person.parent_id != null)
+      .map((person) => ({
+        id: `${person.parent_id}-${person.id}`,
+        from: person.parent_id,
+        to: person.id,
+        hidden: !isNodeVisible(person.id),
+        color: { color: '#94a3b8', highlight: '#4f46e5', hover: '#4f46e5' },
       }))
   )
 
@@ -127,11 +161,14 @@ function renderNetwork() {
   const options = {
     layout: {
       hierarchical: {
-        direction: 'UD',
+        direction: 'LR',
         sortMethod: 'directed',
-        levelSeparation: 110,
-        nodeSpacing: 170,
-        treeSpacing: 190,
+        levelSeparation: 150,
+        nodeSpacing: 140,
+        treeSpacing: 200,
+        blockShifting: true,
+        edgeMinimization: true,
+        parentCentralization: true,
       },
     },
     physics: false,
@@ -141,23 +178,26 @@ function renderNetwork() {
       keyboard: true,
     },
     nodes: {
-      margin: { top: 10, bottom: 10, left: 16, right: 16 },
+      margin: { top: 11, bottom: 11, left: 18, right: 18 },
       borderWidth: 2,
-      borderRadius: 12,
+      borderRadius: 16,
       shadow: {
         enabled: true,
-        color: 'rgba(15, 23, 42, 0.15)',
-        size: 12,
+        color: 'rgba(15, 23, 42, 0.12)',
+        size: 10,
         x: 0,
-        y: 6,
+        y: 5,
       },
     },
     edges: {
+      arrows: { to: { enabled: false } },
       smooth: {
         type: 'cubicBezier',
-        forceDirection: 'vertical',
+        forceDirection: 'horizontal',
+        roundness: 0.48,
       },
       width: 2,
+      selectionWidth: 3,
     },
   }
 
@@ -232,6 +272,9 @@ onUnmounted(() => {
   height: 640px;
   border: 1px solid #dbe3ef;
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
+  background-size: 22px 22px, 100% 100%;
 }
 </style>
