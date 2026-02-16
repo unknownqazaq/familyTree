@@ -71,6 +71,8 @@ const messages = {
       toPlaceholder: 'To person...',
     },
     tree: {
+      heroKicker: 'Your living family map',
+      heroSubtitle: 'Search people, trace connections, and open branches with a single click.',
       findPath: 'Find Path',
       loading: 'Loading tree...',
       empty: 'No persons in the tree yet.',
@@ -233,6 +235,8 @@ const messages = {
       toPlaceholder: 'К кому...',
     },
     tree: {
+      heroKicker: 'Живой архив родословной',
+      heroSubtitle: 'Ищите людей, находите связи и раскрывайте ветви одним кликом.',
       findPath: 'Найти путь',
       loading: 'Загрузка дерева...',
       empty: 'В дереве пока нет людей.',
@@ -395,6 +399,8 @@ const messages = {
       toPlaceholder: 'Қайда...',
     },
     tree: {
+      heroKicker: 'Тірі отбасылық карта',
+      heroSubtitle: 'Адамдарды іздеңіз, байланыстарды табыңыз және бұтақтарды бір шертуімен ашыңыз.',
       findPath: 'Жолды табу',
       loading: 'Ағаш жүктелуде...',
       empty: 'Әзірге ағашта адам жоқ.',
