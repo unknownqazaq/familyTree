@@ -1,6 +1,6 @@
 <template>
   <div class="edit-person">
-    <h2>{{ isEdit ? 'Edit Person' : 'Add Person' }}</h2>
+    <h2>{{ isEdit ? t('person.editTitle') : t('person.addTitle') }}</h2>
 
     <PersonForm
       :initial-data="personData"
@@ -12,9 +12,9 @@
     />
 
     <div v-if="isEdit" class="danger-zone card" style="margin-top: 32px">
-      <h3>Danger Zone</h3>
-      <p>Deleting a person is permanent and cannot be undone.</p>
-      <button class="btn-danger" @click="handleDelete">Delete Person</button>
+      <h3>{{ t('person.dangerTitle') }}</h3>
+      <p>{{ t('person.dangerText') }}</p>
+      <button class="btn-danger" @click="handleDelete">{{ t('person.deletePerson') }}</button>
     </div>
   </div>
 </template>
@@ -22,6 +22,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useTreeStore } from '../stores/tree'
 import PersonForm from '../components/PersonForm.vue'
 
@@ -33,6 +34,7 @@ const isEdit = computed(() => !!route.params.id)
 const personData = ref(null)
 const loading = ref(false)
 const error = ref(null)
+const { t } = useI18n()
 
 onMounted(async () => {
   if (isEdit.value) {
@@ -55,20 +57,20 @@ async function handleSubmit(formData) {
     }
     router.push('/tree')
   } catch (e) {
-    error.value = e.response?.data?.error || 'Failed to save person'
+    error.value = e.response?.data?.error || t('person.saveFailed')
   } finally {
     loading.value = false
   }
 }
 
 async function handleDelete() {
-  if (!confirm('Are you sure you want to delete this person?')) return
+  if (!confirm(t('person.deleteConfirm'))) return
 
   try {
     await treeStore.deletePerson(parseInt(route.params.id))
     router.push('/tree')
   } catch (e) {
-    error.value = e.response?.data?.error || 'Failed to delete person'
+    error.value = e.response?.data?.error || t('person.deleteFailed')
   }
 }
 </script>

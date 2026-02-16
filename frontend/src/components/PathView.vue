@@ -1,6 +1,6 @@
 <template>
   <div class="path-view" v-if="path && path.length > 0">
-    <h3>Path</h3>
+    <h3>{{ t('path.title') }}</h3>
     <div class="path-chain">
       <template v-for="(node, index) in path" :key="node.id">
         <div class="path-node" @click="$emit('node-click', node.id)">
@@ -16,12 +16,16 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+
 defineProps({
   path: { type: Array, default: () => [] },
   error: { type: String, default: null },
 })
 
 defineEmits(['node-click'])
+
+const { t } = useI18n()
 </script>
 
 <style scoped>

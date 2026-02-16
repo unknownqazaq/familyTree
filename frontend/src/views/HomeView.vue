@@ -1,38 +1,42 @@
 <template>
   <div class="home">
     <div class="hero card">
-      <p class="hero-kicker">Welcome to your digital ancestry space</p>
-      <h1>Family Tree</h1>
-      <p>Explore and manage your family history. Add family members, build your tree, and discover connections.</p>
+      <p class="hero-kicker">{{ t('home.kicker') }}</p>
+      <h1>{{ t('home.title') }}</h1>
+      <p>{{ t('home.subtitle') }}</p>
 
       <div class="hero-actions">
-        <router-link to="/tree" class="btn-primary">View Tree</router-link>
-        <router-link v-if="!authStore.isAuthenticated" to="/register" class="btn-success">Get Started</router-link>
-        <router-link v-else to="/person/new" class="btn-success">Add Person</router-link>
+        <router-link to="/tree" class="btn-primary">{{ t('home.viewTree') }}</router-link>
+        <router-link v-if="!authStore.isAuthenticated" to="/register" class="btn-success">
+          {{ t('home.getStarted') }}
+        </router-link>
+        <router-link v-else to="/person/new" class="btn-success">{{ t('home.addPerson') }}</router-link>
       </div>
     </div>
 
     <div class="features">
       <div class="feature card">
-        <h3>Visual Tree</h3>
-        <p>Interactive family tree visualization with clickable nodes and hierarchical layout.</p>
+        <h3>{{ t('home.features.visual.title') }}</h3>
+        <p>{{ t('home.features.visual.body') }}</p>
       </div>
       <div class="feature card">
-        <h3>Find Connections</h3>
-        <p>Discover the path between any two family members through their common ancestors.</p>
+        <h3>{{ t('home.features.connections.title') }}</h3>
+        <p>{{ t('home.features.connections.body') }}</p>
       </div>
       <div class="feature card">
-        <h3>Collaborative</h3>
-        <p>Multiple users can contribute to the family tree with moderation and access control.</p>
+        <h3>{{ t('home.features.collab.title') }}</h3>
+        <p>{{ t('home.features.collab.body') }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
+const { t } = useI18n()
 </script>
 
 <style scoped>

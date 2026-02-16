@@ -1,11 +1,6 @@
 <template>
   <div class="search-bar">
-    <input
-      v-model="query"
-      type="text"
-      :placeholder="placeholder"
-      @input="onSearch"
-    />
+    <input v-model="query" type="text" :placeholder="placeholderText" @input="onSearch" />
     <div v-if="results.length > 0" class="search-results">
       <div
         v-for="person in results"
@@ -20,18 +15,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useTreeStore } from '../stores/tree'
 
 const props = defineProps({
-  placeholder: { type: String, default: 'Search persons...' },
+  placeholder: { type: String, default: '' },
 })
 
 const emit = defineEmits(['select'])
 
 const treeStore = useTreeStore()
+const { t } = useI18n()
 const query = ref('')
 const results = ref([])
+
+const placeholderText = computed(() => props.placeholder || t('search.personsPlaceholder'))
 
 let debounceTimer = null
 

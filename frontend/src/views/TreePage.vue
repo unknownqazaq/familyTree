@@ -2,13 +2,13 @@
   <div class="tree-page">
     <div class="tree-controls card">
       <div class="controls-row">
-        <SearchBar placeholder="Search persons..." @select="onSearchSelect" />
+        <SearchBar :placeholder="t('search.personsPlaceholder')" @select="onSearchSelect" />
 
         <div class="path-finder">
-          <SearchBar placeholder="From person..." @select="onFromSelect" />
-          <SearchBar placeholder="To person..." @select="onToSelect" />
+          <SearchBar :placeholder="t('search.fromPlaceholder')" @select="onFromSelect" />
+          <SearchBar :placeholder="t('search.toPlaceholder')" @select="onToSelect" />
           <button class="btn-primary" @click="findPath" :disabled="!pathFrom || !pathTo">
-            Find Path
+            {{ t('tree.findPath') }}
           </button>
         </div>
       </div>
@@ -20,7 +20,7 @@
       @node-click="navigateToTree"
     />
 
-    <div v-if="treeStore.loading" class="loading">Loading tree...</div>
+    <div v-if="treeStore.loading" class="loading">{{ t('tree.loading') }}</div>
 
     <div v-if="selectedPerson" class="card person-detail">
       <PersonCard :person="selectedPerson" />
@@ -33,9 +33,9 @@
     />
 
     <div v-if="!treeStore.loading && treeStore.persons.length === 0" class="empty-state card">
-      <p>No persons in the tree yet.</p>
+      <p>{{ t('tree.empty') }}</p>
       <router-link v-if="authStore.isAuthenticated" to="/person/new" class="btn-primary">
-        Add First Person
+        {{ t('tree.addFirst') }}
       </router-link>
     </div>
   </div>
@@ -44,6 +44,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useTreeStore } from '../stores/tree'
 import { useAuthStore } from '../stores/auth'
 import TreeView from '../components/TreeView.vue'
@@ -59,6 +60,7 @@ const router = useRouter()
 const selectedPerson = ref(null)
 const pathFrom = ref(null)
 const pathTo = ref(null)
+const { t } = useI18n()
 
 onMounted(async () => {
   await treeStore.fetchFullTree()

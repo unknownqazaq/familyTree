@@ -3,34 +3,43 @@
     <div class="person-header">
       <h3>{{ person.name }}</h3>
       <span :class="['badge', person.access === 'public' ? 'badge-public' : 'badge-private']">
-        {{ person.access }}
+        {{ accessLabel }}
       </span>
     </div>
 
     <div v-if="person.designation" class="person-field">
-      <strong>Designation:</strong> {{ person.designation }}
+      <strong>{{ t('labels.designation') }}:</strong> {{ person.designation }}
     </div>
 
     <div v-if="person.reference" class="person-field">
-      <strong>Reference:</strong> {{ person.reference }}
+      <strong>{{ t('labels.reference') }}:</strong> {{ person.reference }}
     </div>
 
     <div v-if="person.history" class="person-field">
-      <strong>History:</strong> {{ person.history }}
+      <strong>{{ t('labels.history') }}:</strong> {{ person.history }}
     </div>
 
     <div class="person-actions" v-if="showActions">
-      <router-link :to="`/person/${person.id}/edit`" class="btn-primary">Edit</router-link>
-      <router-link :to="`/tree/${person.id}`" class="btn-success">View Tree</router-link>
+      <router-link :to="`/person/${person.id}/edit`" class="btn-primary">{{ t('common.edit') }}</router-link>
+      <router-link :to="`/tree/${person.id}`" class="btn-success">{{ t('common.viewTree') }}</router-link>
     </div>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const props = defineProps({
   person: { type: Object, required: true },
   showActions: { type: Boolean, default: true },
 })
+
+const { t } = useI18n()
+
+const accessLabel = computed(() =>
+  props.person?.access === 'public' ? t('common.public') : t('common.private')
+)
 </script>
 
 <style scoped>

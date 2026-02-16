@@ -1,47 +1,47 @@
 <template>
   <form class="person-form" @submit.prevent="onSubmit">
     <div class="form-group">
-      <label>Name *</label>
-      <input v-model="form.name" type="text" required placeholder="Person's name" />
+      <label>{{ t('person.nameLabel') }}</label>
+      <input v-model="form.name" type="text" required :placeholder="t('person.namePlaceholder')" />
     </div>
 
     <div class="form-group">
-      <label>Parent</label>
-      <SearchBar placeholder="Search for parent..." @select="onParentSelect" />
+      <label>{{ t('person.parentLabel') }}</label>
+      <SearchBar :placeholder="t('search.parentPlaceholder')" @select="onParentSelect" />
       <div v-if="selectedParent" class="selected-parent">
-        Selected: {{ selectedParent.name }}
+        {{ t('person.selected') }} {{ selectedParent.name }}
         <button type="button" class="btn-remove" @click="clearParent">&times;</button>
       </div>
     </div>
 
     <div class="form-group">
-      <label>Designation</label>
-      <input v-model="form.designation" type="text" placeholder="e.g. King, Scholar" />
+      <label>{{ t('person.designationLabel') }}</label>
+      <input v-model="form.designation" type="text" :placeholder="t('person.designationPlaceholder')" />
     </div>
 
     <div class="form-group">
-      <label>Reference</label>
-      <textarea v-model="form.reference" rows="2" placeholder="Reference information"></textarea>
+      <label>{{ t('person.referenceLabel') }}</label>
+      <textarea v-model="form.reference" rows="2" :placeholder="t('person.referencePlaceholder')"></textarea>
     </div>
 
     <div class="form-group">
-      <label>History</label>
-      <textarea v-model="form.history" rows="4" placeholder="Historical information"></textarea>
+      <label>{{ t('person.historyLabel') }}</label>
+      <textarea v-model="form.history" rows="4" :placeholder="t('person.historyPlaceholder')"></textarea>
     </div>
 
     <div class="form-group">
-      <label>Access</label>
+      <label>{{ t('person.accessLabel') }}</label>
       <select v-model="form.access">
-        <option value="private">Private</option>
-        <option value="public">Public</option>
+        <option value="private">{{ t('common.private') }}</option>
+        <option value="public">{{ t('common.public') }}</option>
       </select>
     </div>
 
     <div class="form-actions">
       <button type="submit" class="btn-primary" :disabled="loading">
-        {{ loading ? 'Saving...' : (isEdit ? 'Update' : 'Create') }}
+        {{ loading ? t('common.saving') : (isEdit ? t('common.update') : t('common.create')) }}
       </button>
-      <button type="button" class="btn-secondary" @click="$emit('cancel')">Cancel</button>
+      <button type="button" class="btn-secondary" @click="$emit('cancel')">{{ t('common.cancel') }}</button>
     </div>
 
     <p v-if="error" class="error-msg">{{ error }}</p>
@@ -50,6 +50,7 @@
 
 <script setup>
 import { ref, reactive, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SearchBar from './SearchBar.vue'
 
 const props = defineProps({
@@ -60,6 +61,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['submit', 'cancel'])
+const { t } = useI18n()
 
 const form = reactive({
   name: '',

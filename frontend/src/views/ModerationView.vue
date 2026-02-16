@@ -1,8 +1,8 @@
 <template>
   <div class="moderation-page">
-    <h2>Moderation Queue</h2>
+    <h2>{{ t('moderation.title') }}</h2>
 
-    <div v-if="loading" class="loading">Loading pending entries...</div>
+    <div v-if="loading" class="loading">{{ t('moderation.loading') }}</div>
 
     <div v-if="error" class="error-msg">{{ error }}</div>
 
@@ -10,39 +10,43 @@
       <div v-for="person in persons" :key="person.id" class="card pending-item">
         <div class="pending-header">
           <h3>{{ person.name }}</h3>
-          <span class="badge-private">private</span>
+          <span class="badge-private">{{ t('moderation.privateBadge') }}</span>
         </div>
 
         <div v-if="person.designation" class="field">
-          <strong>Designation:</strong> {{ person.designation }}
+          <strong>{{ t('labels.designation') }}:</strong> {{ person.designation }}
         </div>
         <div v-if="person.reference" class="field">
-          <strong>Reference:</strong> {{ person.reference }}
+          <strong>{{ t('labels.reference') }}:</strong> {{ person.reference }}
         </div>
         <div v-if="person.history" class="field">
-          <strong>History:</strong> {{ person.history }}
+          <strong>{{ t('labels.history') }}:</strong> {{ person.history }}
         </div>
 
         <div class="pending-actions">
-          <button class="btn-success" @click="publish(person.id)">Publish</button>
-          <router-link :to="`/person/${person.id}/edit`" class="btn-primary action-link">Edit</router-link>
+          <button class="btn-success" @click="publish(person.id)">{{ t('moderation.publish') }}</button>
+          <router-link :to="`/person/${person.id}/edit`" class="btn-primary action-link">
+            {{ t('common.edit') }}
+          </router-link>
         </div>
       </div>
     </div>
 
     <div v-else-if="!loading" class="card empty-state">
-      <p>No pending entries to moderate.</p>
+      <p>{{ t('moderation.empty') }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../api'
 
 const persons = ref([])
 const loading = ref(false)
 const error = ref('')
+const { t } = useI18n()
 
 onMounted(async () => {
   await fetchPending()
@@ -55,7 +59,7 @@ async function fetchPending() {
     const { data } = await api.get('/admin/pending')
     persons.value = data || []
   } catch (e) {
-    error.value = e.response?.data?.error || 'Failed to load pending entries'
+    error.value = e.response?.data?.error || t('moderation.loadFailed')
   } finally {
     loading.value = false
   }
@@ -66,7 +70,7 @@ async function publish(id) {
     await api.put(`/admin/publish/${id}`)
     persons.value = persons.value.filter((p) => p.id !== id)
   } catch (e) {
-    error.value = e.response?.data?.error || 'Failed to publish'
+    error.value = e.response?.data?.error || t('moderation.publishFailed')
   }
 }
 </script>

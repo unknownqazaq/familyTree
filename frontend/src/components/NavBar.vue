@@ -1,33 +1,50 @@
 <template>
   <nav class="navbar">
     <div class="navbar-inner">
-      <router-link to="/" class="navbar-brand">Family Tree</router-link>
+      <router-link to="/" class="navbar-brand">{{ t('nav.brand') }}</router-link>
 
       <div class="navbar-links">
-        <router-link to="/tree">Tree</router-link>
+        <router-link to="/tree">{{ t('nav.tree') }}</router-link>
         <template v-if="authStore.isAuthenticated">
-          <router-link to="/person/new">Add Person</router-link>
-          <router-link v-if="authStore.isStaff" to="/moderation">Moderation</router-link>
-          <router-link v-if="authStore.isAdmin" to="/admin">Admin</router-link>
-          <router-link to="/settings">Settings</router-link>
+          <router-link to="/person/new">{{ t('nav.addPerson') }}</router-link>
+          <router-link v-if="authStore.isStaff" to="/moderation">{{ t('nav.moderation') }}</router-link>
+          <router-link v-if="authStore.isAdmin" to="/admin">{{ t('nav.admin') }}</router-link>
+          <router-link to="/settings">{{ t('nav.settings') }}</router-link>
           <span class="user-email">{{ authStore.user?.email }}</span>
-          <button class="btn-secondary" @click="handleLogout">Logout</button>
+          <button class="btn-secondary" @click="handleLogout">{{ t('nav.logout') }}</button>
         </template>
         <template v-else>
-          <router-link to="/login">Login</router-link>
-          <router-link to="/register">Register</router-link>
+          <router-link to="/login">{{ t('nav.login') }}</router-link>
+          <router-link to="/register">{{ t('nav.register') }}</router-link>
         </template>
+        <div class="lang-switch">
+          <label class="lang-label" for="language-select">{{ t('nav.language') }}</label>
+          <select id="language-select" v-model="localeValue" class="lang-select">
+            <option value="ru">RU</option>
+            <option value="en">EN</option>
+            <option value="kk">KK</option>
+          </select>
+        </div>
       </div>
     </div>
   </nav>
 </template>
 
 <script setup>
-import { useAuthStore } from '../stores/auth'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { setLocale } from '../i18n'
+import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const { t, locale } = useI18n()
+
+const localeValue = computed({
+  get: () => locale.value,
+  set: (value) => setLocale(value),
+})
 
 function handleLogout() {
   authStore.logout()
@@ -100,6 +117,37 @@ function handleLogout() {
   border: 1px solid #e2e8f0;
   border-radius: 999px;
   padding: 5px 10px;
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.lang-label {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.lang-select {
+  font-size: 12px;
+  border: none;
+  background: transparent;
+  color: #0f172a;
+  font-weight: 700;
+  padding: 0 2px;
+  width: auto;
+  appearance: none;
+}
+
+.lang-select:focus {
+  outline: none;
 }
 
 @media (max-width: 900px) {

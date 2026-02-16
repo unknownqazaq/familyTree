@@ -1,28 +1,28 @@
 <template>
   <div class="auth-page">
     <div class="card auth-card">
-      <h2>Login</h2>
+      <h2>{{ t('auth.loginTitle') }}</h2>
 
       <form @submit.prevent="handleLogin">
         <div class="form-group">
-          <label>Email</label>
-          <input v-model="email" type="email" required placeholder="your@email.com" />
+          <label>{{ t('auth.emailLabel') }}</label>
+          <input v-model="email" type="email" required :placeholder="t('auth.emailPlaceholder')" />
         </div>
 
         <div class="form-group">
-          <label>Password</label>
-          <input v-model="password" type="password" required placeholder="Password" />
+          <label>{{ t('auth.passwordLabel') }}</label>
+          <input v-model="password" type="password" required :placeholder="t('auth.passwordPlaceholder')" />
         </div>
 
         <p v-if="error" class="error-msg">{{ error }}</p>
 
         <button type="submit" class="btn-primary" :disabled="loading" style="width: 100%">
-          {{ loading ? 'Logging in...' : 'Login' }}
+          {{ loading ? t('auth.loggingIn') : t('auth.login') }}
         </button>
       </form>
 
       <p class="auth-link">
-        Don't have an account? <router-link to="/register">Register</router-link>
+        {{ t('auth.noAccount') }} <router-link to="/register">{{ t('auth.register') }}</router-link>
       </p>
     </div>
   </div>
@@ -31,6 +31,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
@@ -41,6 +42,7 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
+const { t } = useI18n()
 
 async function handleLogin() {
   loading.value = true
@@ -50,7 +52,7 @@ async function handleLogin() {
     const redirect = route.query.redirect || '/'
     router.push(redirect)
   } catch (e) {
-    error.value = e.response?.data?.error || 'Login failed'
+    error.value = e.response?.data?.error || t('auth.loginFailed')
   } finally {
     loading.value = false
   }

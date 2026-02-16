@@ -1,8 +1,8 @@
 <template>
   <div class="tree-view card">
     <div class="tree-header">
-      <h3>Family Graph</h3>
-      <p>Нажмите на узел, чтобы раскрыть или свернуть ветки.</p>
+      <h3>{{ t('tree.familyGraph') }}</h3>
+      <p>{{ t('tree.expandHint') }}</p>
     </div>
     <div ref="networkContainer" class="network-container"></div>
   </div>
@@ -10,6 +10,7 @@
 
 <script setup>
 import { computed, ref, onMounted, watch, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Network } from 'vis-network'
 import { DataSet } from 'vis-data'
 
@@ -18,6 +19,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['node-click'])
+const { t } = useI18n()
 
 const networkContainer = ref(null)
 let network = null
@@ -85,7 +87,7 @@ function buildGraph(persons) {
 
       return {
         id: p.id,
-        label: hasChildren ? `${p.name}\n${isCollapsed ? '▶ показать ветки' : '▼ скрыть ветки'}` : p.name,
+        label: hasChildren ? `${p.name}\n${isCollapsed ? '' : ''}` : p.name,
         shape: 'box',
         hidden: !isNodeVisible(p.id),
         color: {

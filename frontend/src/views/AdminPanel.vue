@@ -1,13 +1,13 @@
 <template>
   <div class="admin-panel">
-    <h2>Admin Panel</h2>
+    <h2>{{ t('admin.title') }}</h2>
 
     <div class="admin-section card">
-      <h3>Database Backups</h3>
+      <h3>{{ t('admin.backupsTitle') }}</h3>
 
       <div class="backup-actions">
         <button class="btn-primary" @click="createBackup" :disabled="backupLoading">
-          {{ backupLoading ? 'Creating...' : 'Create Backup' }}
+          {{ backupLoading ? t('admin.creating') : t('admin.createBackup') }}
         </button>
       </div>
 
@@ -18,10 +18,10 @@
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Size</th>
-              <th>Created</th>
-              <th>Actions</th>
+              <th>{{ t('admin.table.name') }}</th>
+              <th>{{ t('admin.table.size') }}</th>
+              <th>{{ t('admin.table.created') }}</th>
+              <th>{{ t('admin.table.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -30,26 +30,30 @@
               <td>{{ formatSize(backup.size) }}</td>
               <td>{{ backup.created_at }}</td>
               <td>
-                <button class="btn-danger" @click="restoreBackup(backup.name)">Restore</button>
+                <button class="btn-danger" @click="restoreBackup(backup.name)">
+                  {{ t('admin.restore') }}
+                </button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <p v-else class="empty-text">No backups yet</p>
+      <p v-else class="empty-text">{{ t('admin.empty') }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import api from '../api'
 
 const backups = ref([])
 const backupLoading = ref(false)
 const backupMessage = ref('')
 const backupError = ref('')
+const { t } = useI18n()
 
 onMounted(async () => {
   await fetchBackups()
@@ -60,7 +64,7 @@ async function fetchBackups() {
     const { data } = await api.get('/admin/backups')
     backups.value = data || []
   } catch (e) {
-    backupError.value = 'Failed to load backups'
+    backupError.value = t('admin.loadFailed')
   }
 }
 
@@ -71,23 +75,23 @@ async function createBackup() {
 
   try {
     const { data } = await api.post('/admin/backup')
-    backupMessage.value = `Backup created: ${data.name}`
+    backupMessage.value = t('admin.backupCreated', { name: data.name })
     await fetchBackups()
   } catch (e) {
-    backupError.value = e.response?.data?.error || 'Failed to create backup'
+    backupError.value = e.response?.data?.error || t('admin.createFailed')
   } finally {
     backupLoading.value = false
   }
 }
 
 async function restoreBackup(name) {
-  if (!confirm(`Restore database from ${name}? This will overwrite current data.`)) return
+  if (!confirm(t('admin.restoreConfirm', { name }))) return
 
   try {
     await api.post(`/admin/restore/${name}`)
-    backupMessage.value = 'Database restored successfully'
+    backupMessage.value = t('admin.restoreSuccess')
   } catch (e) {
-    backupError.value = e.response?.data?.error || 'Failed to restore backup'
+    backupError.value = e.response?.data?.error || t('admin.restoreFailed')
   }
 }
 

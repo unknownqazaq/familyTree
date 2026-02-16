@@ -1,38 +1,38 @@
 <template>
   <div class="settings-page">
-    <h2>Profile Settings</h2>
+    <h2>{{ t('settings.title') }}</h2>
 
     <div class="card">
       <form @submit.prevent="handleUpdate">
         <div class="form-row">
           <div class="form-group">
-            <label>First Name</label>
+            <label>{{ t('settings.firstName') }}</label>
             <input v-model="form.first_name" type="text" />
           </div>
           <div class="form-group">
-            <label>Last Name</label>
+            <label>{{ t('settings.lastName') }}</label>
             <input v-model="form.last_name" type="text" />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Father Name</label>
+            <label>{{ t('settings.fatherName') }}</label>
             <input v-model="form.father_name" type="text" />
           </div>
           <div class="form-group">
-            <label>Grandfather Name</label>
+            <label>{{ t('settings.grandfatherName') }}</label>
             <input v-model="form.grandfather_name" type="text" />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Birth Date</label>
+            <label>{{ t('settings.birthDate') }}</label>
             <input v-model="form.birth_date" type="date" />
           </div>
           <div class="form-group">
-            <label>Birth Place</label>
+            <label>{{ t('settings.birthPlace') }}</label>
             <input v-model="form.birth_place" type="text" />
           </div>
         </div>
@@ -41,15 +41,15 @@
         <p v-if="success" class="success-msg">{{ success }}</p>
 
         <button type="submit" class="btn-primary" :disabled="loading">
-          {{ loading ? 'Saving...' : 'Save Changes' }}
+          {{ loading ? t('common.saving') : t('settings.saveChanges') }}
         </button>
       </form>
     </div>
 
     <div class="card danger-zone" style="margin-top: 32px">
-      <h3>Delete Account</h3>
-      <p>This action is permanent and cannot be undone. All your data will be lost.</p>
-      <button class="btn-danger" @click="handleDelete">Delete My Account</button>
+      <h3>{{ t('settings.deleteTitle') }}</h3>
+      <p>{{ t('settings.deleteText') }}</p>
+      <button class="btn-danger" @click="handleDelete">{{ t('settings.deleteButton') }}</button>
     </div>
   </div>
 </template>
@@ -57,6 +57,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
@@ -74,6 +75,7 @@ const form = reactive({
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
+const { t } = useI18n()
 
 onMounted(() => {
   if (authStore.user) {
@@ -93,22 +95,22 @@ async function handleUpdate() {
 
   try {
     await authStore.updateProfile({ ...form })
-    success.value = 'Profile updated successfully'
+    success.value = t('settings.updateSuccess')
   } catch (e) {
-    error.value = e.response?.data?.error || 'Failed to update profile'
+    error.value = e.response?.data?.error || t('settings.updateFailed')
   } finally {
     loading.value = false
   }
 }
 
 async function handleDelete() {
-  if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return
+  if (!confirm(t('settings.deleteConfirm'))) return
 
   try {
     await authStore.deleteAccount()
     router.push('/')
   } catch (e) {
-    error.value = e.response?.data?.error || 'Failed to delete account'
+    error.value = e.response?.data?.error || t('settings.deleteFailed')
   }
 }
 </script>
