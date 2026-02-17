@@ -243,9 +243,16 @@ function navigateToTree(nodeId) {
 }
 
 .tree-graph :deep(.tree-view) {
+  width: 100%;
+  max-width: 1100px;
   border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: 0 24px 50px rgba(15, 23, 42, 0.12);
+}
+
+.tree-graph {
+  display: flex;
+  justify-content: center;
 }
 
 .tree-graph :deep(.tree-viewport) {
