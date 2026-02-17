@@ -14,9 +14,9 @@
     </div>
 
     <div ref="viewportRef" class="tree-viewport">
-      <div ref="stageRef" class="tree-stage">
+      <div ref="stageRef" class="tree-stage" :style="stageStyle">
         <svg ref="linesRef" class="tree-lines"></svg>
-        <div ref="mountRef" class="tree-mount"></div>
+        <div ref="mountRef" class="tree-mount" :style="mountStyle"></div>
       </div>
     </div>
 
@@ -113,6 +113,33 @@ const viewportRef = ref(null)
 const stageRef = ref(null)
 const linesRef = ref(null)
 const mountRef = ref(null)
+const zoomScale = ref(1)
+const baseStageWidth = ref(1600)
+const baseStageHeight = ref(900)
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1200)
+const suppressNodeClickUntil = ref(0)
+const viewportDragState = reactive({
+  active: false,
+  moved: false,
+  startX: 0,
+  startY: 0,
+  startScrollLeft: 0,
+  startScrollTop: 0,
+})
+const touchGestureState = reactive({
+  mode: 'none',
+  moved: false,
+  panStartX: 0,
+  panStartY: 0,
+  panStartScrollLeft: 0,
+  panStartScrollTop: 0,
+  pinchStartDistance: 0,
+  pinchStartScale: 1,
+  pinchAnchorX: 0,
+  pinchAnchorY: 0,
+  pinchAnchorScrollLeft: 0,
+  pinchAnchorScrollTop: 0,
+})
 
 const collapsedNodeIds = ref(new Set())
 const selectedNodeId = ref(null)
@@ -133,6 +160,24 @@ const formState = reactive({
 })
 
 const canManage = computed(() => Boolean(authStore.isAuthenticated))
+const minStageWidth = computed(() => {
+  if (windowWidth.value <= 640) return 760
+  if (windowWidth.value <= 980) return 1100
+  return 1600
+})
+const minStageHeight = computed(() => {
+  if (windowWidth.value <= 640) return 620
+  if (windowWidth.value <= 980) return 720
+  return 900
+})
+const stageStyle = computed(() => ({
+  width: `${Math.max(360, Math.ceil(52 + (baseStageWidth.value - 52) * zoomScale.value))}px`,
+  height: `${Math.max(360, Math.ceil(52 + (baseStageHeight.value - 52) * zoomScale.value))}px`,
+}))
+const mountStyle = computed(() => ({
+  transform: `scale(${zoomScale.value})`,
+  transformOrigin: 'top left',
+}))
 
 const personById = computed(() => {
   const map = new Map()
@@ -210,6 +255,11 @@ const parentOptions = computed(() => {
 
 let lineFrameId = null
 let resizeObserver = null
+const MIN_ZOOM_SCALE = 0.55
+const MAX_ZOOM_SCALE = 2.2
+const ZOOM_STEP = 0.1
+const MOBILE_ZOOM_SCALE = 1
+const TABLET_ZOOM_SCALE = 0.95
 
 function resetFormState() {
   formState.name = ''
@@ -397,6 +447,34 @@ function scheduleDrawLines() {
   })
 }
 
+function updateStageBounds() {
+  if (!mountRef.value) return
+
+  const nextWidth = Math.max(minStageWidth.value, Math.ceil(mountRef.value.scrollWidth + 52))
+  const nextHeight = Math.max(minStageHeight.value, Math.ceil(mountRef.value.scrollHeight + 52))
+
+  baseStageWidth.value = nextWidth
+  baseStageHeight.value = nextHeight
+}
+
+function clampZoomScale(value) {
+  const clamped = Math.min(MAX_ZOOM_SCALE, Math.max(MIN_ZOOM_SCALE, value))
+  return Math.round(clamped * 100) / 100
+}
+
+function getTouchDistance(firstTouch, secondTouch) {
+  const deltaX = firstTouch.clientX - secondTouch.clientX
+  const deltaY = firstTouch.clientY - secondTouch.clientY
+  return Math.hypot(deltaX, deltaY)
+}
+
+function getTouchCenter(firstTouch, secondTouch, viewportRect) {
+  return {
+    x: (firstTouch.clientX + secondTouch.clientX) / 2 - viewportRect.left,
+    y: (firstTouch.clientY + secondTouch.clientY) / 2 - viewportRect.top,
+  }
+}
+
 function createIconButton({ title, text, className, onClick }) {
   const button = document.createElement('button')
   button.type = 'button'
@@ -410,6 +488,131 @@ function createIconButton({ title, text, className, onClick }) {
   })
 
   return button
+}
+
+function startViewportDrag(event) {
+  if (event.button !== 0 || !viewportRef.value) return
+  const targetElement = event.target instanceof Element ? event.target : null
+  if (targetElement?.closest('.icon-btn')) return
+
+  viewportDragState.active = true
+  viewportDragState.moved = false
+  viewportDragState.startX = event.clientX
+  viewportDragState.startY = event.clientY
+  viewportDragState.startScrollLeft = viewportRef.value.scrollLeft
+  viewportDragState.startScrollTop = viewportRef.value.scrollTop
+
+  viewportRef.value.classList.add('is-dragging')
+  document.body.style.userSelect = 'none'
+  event.preventDefault()
+}
+
+function moveViewportDrag(event) {
+  if (!viewportDragState.active || !viewportRef.value) return
+
+  const deltaX = event.clientX - viewportDragState.startX
+  const deltaY = event.clientY - viewportDragState.startY
+  if (!viewportDragState.moved && (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2)) {
+    viewportDragState.moved = true
+  }
+
+  viewportRef.value.scrollLeft = viewportDragState.startScrollLeft - deltaX
+  viewportRef.value.scrollTop = viewportDragState.startScrollTop - deltaY
+  event.preventDefault()
+}
+
+function stopViewportDrag() {
+  if (!viewportDragState.active) return
+
+  if (viewportDragState.moved) {
+    suppressNodeClickUntil.value = Date.now() + 180
+  }
+
+  viewportDragState.active = false
+  viewportDragState.moved = false
+
+  if (viewportRef.value) {
+    viewportRef.value.classList.remove('is-dragging')
+  }
+  document.body.style.userSelect = ''
+}
+
+function startTouchPan(touch) {
+  if (!viewportRef.value) return
+
+  touchGestureState.mode = 'pan'
+  touchGestureState.moved = false
+  touchGestureState.panStartX = touch.clientX
+  touchGestureState.panStartY = touch.clientY
+  touchGestureState.panStartScrollLeft = viewportRef.value.scrollLeft
+  touchGestureState.panStartScrollTop = viewportRef.value.scrollTop
+  viewportRef.value.classList.add('is-dragging')
+}
+
+function moveTouchPan(touch) {
+  if (!viewportRef.value || touchGestureState.mode !== 'pan') return
+
+  const deltaX = touch.clientX - touchGestureState.panStartX
+  const deltaY = touch.clientY - touchGestureState.panStartY
+  if (!touchGestureState.moved && (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2)) {
+    touchGestureState.moved = true
+  }
+
+  if (!touchGestureState.moved) return false
+
+  viewportRef.value.scrollLeft = touchGestureState.panStartScrollLeft - deltaX
+  viewportRef.value.scrollTop = touchGestureState.panStartScrollTop - deltaY
+  scheduleDrawLines()
+  return true
+}
+
+function startTouchPinch(firstTouch, secondTouch) {
+  if (!viewportRef.value) return
+
+  const viewportRect = viewportRef.value.getBoundingClientRect()
+  const center = getTouchCenter(firstTouch, secondTouch, viewportRect)
+
+  touchGestureState.mode = 'pinch'
+  touchGestureState.moved = true
+  touchGestureState.pinchStartDistance = Math.max(1, getTouchDistance(firstTouch, secondTouch))
+  touchGestureState.pinchStartScale = zoomScale.value
+  touchGestureState.pinchAnchorX = center.x
+  touchGestureState.pinchAnchorY = center.y
+  touchGestureState.pinchAnchorScrollLeft = viewportRef.value.scrollLeft
+  touchGestureState.pinchAnchorScrollTop = viewportRef.value.scrollTop
+}
+
+function moveTouchPinch(firstTouch, secondTouch) {
+  if (!viewportRef.value || touchGestureState.mode !== 'pinch') return
+
+  const viewport = viewportRef.value
+  const currentDistance = Math.max(1, getTouchDistance(firstTouch, secondTouch))
+  const scaleRatio = currentDistance / touchGestureState.pinchStartDistance
+  const nextScale = clampZoomScale(touchGestureState.pinchStartScale * scaleRatio)
+  if (nextScale === zoomScale.value) return
+
+  const anchorStageX = touchGestureState.pinchAnchorScrollLeft + touchGestureState.pinchAnchorX
+  const anchorStageY = touchGestureState.pinchAnchorScrollTop + touchGestureState.pinchAnchorY
+  const ratio = nextScale / zoomScale.value
+
+  zoomScale.value = nextScale
+  updateStageBounds()
+  viewport.scrollLeft = Math.max(0, anchorStageX * ratio - touchGestureState.pinchAnchorX)
+  viewport.scrollTop = Math.max(0, anchorStageY * ratio - touchGestureState.pinchAnchorY)
+  scheduleDrawLines()
+}
+
+function stopTouchGesture() {
+  if (touchGestureState.moved) {
+    suppressNodeClickUntil.value = Date.now() + 220
+  }
+
+  touchGestureState.mode = 'none'
+  touchGestureState.moved = false
+
+  if (viewportRef.value) {
+    viewportRef.value.classList.remove('is-dragging')
+  }
 }
 
 function handleSelectNode(nodeId) {
@@ -544,6 +747,7 @@ function createNodeRow(nodeId, isRoot = false, path = new Set()) {
 
   card.addEventListener('click', (event) => {
     if (event.target.closest('.icon-btn')) return
+    if (Date.now() < suppressNodeClickUntil.value) return
     handleSelectNode(nodeId)
   })
 
@@ -575,6 +779,7 @@ function renderMindMap() {
     }
   })
 
+  updateStageBounds()
   scheduleDrawLines()
 }
 
@@ -662,7 +867,105 @@ function handleViewportScroll() {
 }
 
 function handleWindowResize() {
+  windowWidth.value = window.innerWidth
+  updateStageBounds()
   scheduleDrawLines()
+}
+
+function handleViewportWheel(event) {
+  if (!viewportRef.value || props.persons.length === 0) return
+
+  event.preventDefault()
+
+  const delta = event.deltaY !== 0 ? event.deltaY : event.deltaX
+  if (delta === 0) return
+
+  const nextScale = clampZoomScale(zoomScale.value + (delta < 0 ? ZOOM_STEP : -ZOOM_STEP))
+  if (nextScale === zoomScale.value) return
+
+  const viewport = viewportRef.value
+  const viewportRect = viewport.getBoundingClientRect()
+  const mouseX = event.clientX - viewportRect.left
+  const mouseY = event.clientY - viewportRect.top
+  const stageX = viewport.scrollLeft + mouseX
+  const stageY = viewport.scrollTop + mouseY
+  const ratio = nextScale / zoomScale.value
+
+  zoomScale.value = nextScale
+
+  nextTick(() => {
+    updateStageBounds()
+    viewport.scrollLeft = Math.max(0, stageX * ratio - mouseX)
+    viewport.scrollTop = Math.max(0, stageY * ratio - mouseY)
+    scheduleDrawLines()
+  })
+}
+
+function handleViewportMouseDown(event) {
+  startViewportDrag(event)
+}
+
+function handleWindowMouseMove(event) {
+  moveViewportDrag(event)
+}
+
+function handleWindowMouseUp() {
+  stopViewportDrag()
+}
+
+function handleViewportTouchStart(event) {
+  if (!viewportRef.value || props.persons.length === 0) return
+  const targetElement = event.target instanceof Element ? event.target : null
+  if (targetElement?.closest('.icon-btn')) return
+
+  if (event.touches.length === 1) {
+    startTouchPan(event.touches[0])
+    return
+  }
+
+  if (event.touches.length >= 2) {
+    startTouchPinch(event.touches[0], event.touches[1])
+    event.preventDefault()
+  }
+}
+
+function handleViewportTouchMove(event) {
+  if (!viewportRef.value || props.persons.length === 0) return
+
+  if (event.touches.length >= 2) {
+    if (touchGestureState.mode !== 'pinch') {
+      startTouchPinch(event.touches[0], event.touches[1])
+    }
+    moveTouchPinch(event.touches[0], event.touches[1])
+    event.preventDefault()
+    return
+  }
+
+  if (event.touches.length === 1) {
+    if (touchGestureState.mode !== 'pan') {
+      startTouchPan(event.touches[0])
+    }
+    const didMove = moveTouchPan(event.touches[0])
+    if (didMove) {
+      event.preventDefault()
+    }
+  }
+}
+
+function handleViewportTouchEnd(event) {
+  if (!viewportRef.value) return
+
+  if (event.touches.length >= 2) {
+    startTouchPinch(event.touches[0], event.touches[1])
+    return
+  }
+
+  if (event.touches.length === 1) {
+    startTouchPan(event.touches[0])
+    return
+  }
+
+  stopTouchGesture()
 }
 
 watch(
@@ -707,11 +1010,27 @@ watch(
 )
 
 onMounted(() => {
+  windowWidth.value = window.innerWidth
+  if (windowWidth.value <= 640) {
+    zoomScale.value = MOBILE_ZOOM_SCALE
+  } else if (windowWidth.value <= 980) {
+    zoomScale.value = TABLET_ZOOM_SCALE
+  }
+
   if (viewportRef.value) {
     viewportRef.value.addEventListener('scroll', handleViewportScroll, { passive: true })
+    viewportRef.value.addEventListener('wheel', handleViewportWheel, { passive: false })
+    viewportRef.value.addEventListener('mousedown', handleViewportMouseDown)
+    viewportRef.value.addEventListener('touchstart', handleViewportTouchStart, { passive: false })
+    viewportRef.value.addEventListener('touchmove', handleViewportTouchMove, { passive: false })
+    viewportRef.value.addEventListener('touchend', handleViewportTouchEnd, { passive: false })
+    viewportRef.value.addEventListener('touchcancel', handleViewportTouchEnd, { passive: false })
   }
 
   window.addEventListener('resize', handleWindowResize)
+  window.addEventListener('mousemove', handleWindowMouseMove)
+  window.addEventListener('mouseup', handleWindowMouseUp)
+  window.addEventListener('blur', handleWindowMouseUp)
 
   if (typeof ResizeObserver !== 'undefined' && stageRef.value) {
     resizeObserver = new ResizeObserver(() => {
@@ -730,9 +1049,20 @@ onMounted(() => {
 onUnmounted(() => {
   if (viewportRef.value) {
     viewportRef.value.removeEventListener('scroll', handleViewportScroll)
+    viewportRef.value.removeEventListener('wheel', handleViewportWheel)
+    viewportRef.value.removeEventListener('mousedown', handleViewportMouseDown)
+    viewportRef.value.removeEventListener('touchstart', handleViewportTouchStart)
+    viewportRef.value.removeEventListener('touchmove', handleViewportTouchMove)
+    viewportRef.value.removeEventListener('touchend', handleViewportTouchEnd)
+    viewportRef.value.removeEventListener('touchcancel', handleViewportTouchEnd)
   }
 
   window.removeEventListener('resize', handleWindowResize)
+  window.removeEventListener('mousemove', handleWindowMouseMove)
+  window.removeEventListener('mouseup', handleWindowMouseUp)
+  window.removeEventListener('blur', handleWindowMouseUp)
+  stopViewportDrag()
+  stopTouchGesture()
 
   if (resizeObserver) {
     resizeObserver.disconnect()
@@ -841,6 +1171,9 @@ onUnmounted(() => {
   position: relative;
   height: 560px;
   overflow: auto;
+  cursor: grab;
+  touch-action: none;
+  -webkit-overflow-scrolling: auto;
   border-radius: 16px;
   border: 1px solid var(--border);
   background:
@@ -850,10 +1183,17 @@ onUnmounted(() => {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.66);
 }
 
+.tree-viewport.is-dragging {
+  cursor: grabbing;
+}
+
+.tree-viewport.is-dragging * {
+  cursor: grabbing !important;
+}
+
 .tree-stage {
   position: relative;
-  width: max-content;
-  min-width: 1600px;
+  width: 1600px;
   min-height: 900px;
   padding: 26px;
 }
@@ -867,11 +1207,15 @@ onUnmounted(() => {
 }
 
 .tree-mount {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   gap: var(--gap-y);
   width: max-content;
+  transform-origin: top left;
+  will-change: transform;
 }
 
 .tree-row {
@@ -1110,26 +1454,154 @@ onUnmounted(() => {
   border: 3px solid rgba(241, 245, 249, 0.78);
 }
 
+@media (max-width: 1080px) {
+  .tree-view {
+    --gap-x: 28px;
+    --gap-y: 14px;
+    --node-width: 210px;
+    padding: 16px 14px 12px;
+  }
+
+  .tree-viewport {
+    height: 520px;
+  }
+
+  .tree-stage {
+    padding: 20px;
+  }
+}
+
 @media (max-width: 880px) {
+  .tree-view {
+    --gap-x: 22px;
+    --gap-y: 12px;
+    --node-width: 196px;
+    border-radius: 16px;
+    padding: 14px 12px 10px;
+  }
+
   .tree-header {
     flex-direction: column;
+    gap: 10px;
+    padding: 4px 4px 10px;
+  }
+
+  .header-copy p {
+    font-size: 12.5px;
   }
 
   .header-controls {
     width: 100%;
+    gap: 8px;
   }
 
-  .control-btn {
+  .header-controls .control-btn,
+  .stats-pill {
     width: 100%;
+    justify-content: center;
   }
 
   .tree-viewport {
-    height: 560px;
+    height: 460px;
+    border-radius: 14px;
   }
 
   .tree-stage {
-    min-width: 1200px;
-    min-height: 760px;
+    padding: 16px;
+  }
+
+  .tree-node {
+    border-radius: 14px;
+    padding: 10px 10px 8px;
+  }
+
+  .icon-btn {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+@media (max-width: 640px) {
+  .tree-view {
+    --gap-x: 16px;
+    --gap-y: 10px;
+    --node-width: 176px;
+    border-radius: 14px;
+    padding: 12px 10px 8px;
+  }
+
+  .header-copy h3 {
+    font-size: 16px;
+  }
+
+  .header-copy p {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .tree-viewport {
+    height: 400px;
+  }
+
+  .tree-stage {
+    padding: 12px;
+  }
+
+  .node-label {
+    font-size: 12px;
+  }
+
+  .node-designation,
+  .node-meta {
+    font-size: 11px;
+  }
+
+  .icon-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  .access-badge {
+    font-size: 10px;
+    padding: 2px 7px;
+  }
+
+  .modal-card {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .tree-viewport {
+    height: 340px;
+  }
+
+  .tree-stage {
+    padding: 10px;
+  }
+
+  .header-controls .control-btn {
+    min-height: 34px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .stats-pill {
+    font-size: 11px;
+    padding: 7px 9px;
   }
 }
 </style>

@@ -160,4 +160,38 @@ select:focus {
   font-size: 13px;
   margin-top: 4px;
 }
+
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 24px 16px 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 18px 12px 24px;
+  }
+
+  .card {
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 14px 10px 20px;
+  }
+
+  button {
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  .card {
+    border-radius: 14px;
+    padding: 14px;
+  }
+}
 </style>

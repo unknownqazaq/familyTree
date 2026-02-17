@@ -123,6 +123,9 @@ function navigateToTree(nodeId) {
 .tree-page {
   display: grid;
   gap: 20px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .tree-hero {
@@ -253,6 +256,8 @@ function navigateToTree(nodeId) {
 .tree-graph {
   display: flex;
   justify-content: center;
+  width: 100%;
+  min-width: 0;
 }
 
 .tree-graph :deep(.tree-viewport) {
@@ -305,8 +310,83 @@ function navigateToTree(nodeId) {
 }
 
 @media (max-width: 980px) {
+  .tree-page {
+    gap: 16px;
+  }
+
   .controls-row {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .path-finder {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .tree-graph :deep(.tree-view) {
+    max-width: 100%;
+    border-radius: 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  .tree-page {
+    gap: 14px;
+  }
+
+  .tree-hero {
+    padding: 20px 16px 18px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(24px, 7vw, 30px);
+  }
+
+  .hero-subtitle {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .hero-orb {
+    display: none;
+  }
+
+  .panel-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .path-finder {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .tree-graph :deep(.tree-view) {
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .tree-page {
+    gap: 12px;
+  }
+
+  .tree-hero {
+    padding: 16px 12px;
+  }
+
+  .hero-kicker {
+    letter-spacing: 0.11em;
+  }
+
+  .loading-card {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .empty-state {
+    padding: 24px 16px;
   }
 }
 </style>

@@ -163,4 +163,41 @@ function handleLogout() {
     justify-content: flex-start;
   }
 }
+
+@media (max-width: 640px) {
+  .navbar-inner {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .navbar-brand {
+    font-size: 18px;
+  }
+
+  .navbar-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  .navbar-links > a,
+  .navbar-links > button {
+    width: 100%;
+    text-align: center;
+    justify-self: stretch;
+  }
+
+  .user-email {
+    grid-column: 1 / -1;
+    width: 100%;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .lang-switch {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}
 </style>

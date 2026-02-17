@@ -57,7 +57,7 @@ function selectPerson(person) {
 .search-bar {
   position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: 100%;
 }
 
 .search-results {
