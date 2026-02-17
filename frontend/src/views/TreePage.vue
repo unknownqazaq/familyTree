@@ -248,7 +248,7 @@ function navigateToTree(nodeId) {
   box-shadow: 0 24px 50px rgba(15, 23, 42, 0.12);
 }
 
-.tree-graph :deep(.network-container) {
+.tree-graph :deep(.tree-viewport) {
   border-radius: 18px;
 }
 
