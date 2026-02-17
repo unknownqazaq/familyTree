@@ -201,19 +201,20 @@ const personById = computed(() => {
 })
 
 const childrenByParentId = computed(() => {
-  const map = new Map()
-
+  const childrenMap = new Map()
+  
+  // Two iterations: first to initialize, second to populate
   props.persons.forEach((person) => {
-    map.set(person.id, [])
+    childrenMap.set(person.id, [])
   })
 
   props.persons.forEach((person) => {
-    if (person.parent_id != null && map.has(person.parent_id)) {
-      map.get(person.parent_id).push(person.id)
+    if (person.parent_id != null && childrenMap.has(person.parent_id)) {
+      childrenMap.get(person.parent_id).push(person.id)
     }
   })
 
-  return map
+  return childrenMap
 })
 
 const rootIds = computed(() => {
@@ -989,8 +990,9 @@ function handleViewportTouchEnd(event) {
   stopTouchGesture()
 }
 
+// Consolidated watcher for all render triggers - removes deep watch for better performance
 watch(
-  () => props.persons,
+  () => [props.persons.length, canManage.value, canSeeNodeMeta.value, locale.value],
   async () => {
     syncCollapsedState()
 
@@ -1016,22 +1018,7 @@ watch(
       autoCentered.value = true
     }
   },
-  { immediate: true, deep: true }
-)
-
-watch(canManage, () => {
-  renderMindMap()
-})
-
-watch(canSeeNodeMeta, () => {
-  renderMindMap()
-})
-
-watch(
-  () => locale.value,
-  () => {
-    renderMindMap()
-  }
+  { immediate: true }
 )
 
 onMounted(() => {

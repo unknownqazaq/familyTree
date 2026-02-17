@@ -63,11 +63,11 @@ func (r *PersonRepository) Search(query string, limit int) ([]models.Person, err
 func (r *PersonRepository) SearchForUser(query string, userID int, limit int) ([]models.Person, error) {
 	persons := []models.Person{}
 	err := r.db.Select(&persons,
-		`SELECT * FROM persons
-		WHERE LOWER(name) LIKE LOWER($1)
-		AND (access = 'public' OR created_by = $2
-			OR id IN (SELECT person_id FROM person_editors WHERE user_id = $2))
-		ORDER BY name LIMIT $3`,
+		`SELECT DISTINCT p.* FROM persons p
+		LEFT JOIN person_editors pe ON p.id = pe.person_id AND pe.user_id = $2
+		WHERE LOWER(p.name) LIKE LOWER($1)
+		AND (p.access = 'public' OR p.created_by = $2 OR pe.user_id IS NOT NULL)
+		ORDER BY p.name LIMIT $3`,
 		"%"+query+"%", userID, limit)
 	return persons, err
 }
@@ -87,10 +87,10 @@ func (r *PersonRepository) GetAllPublic() ([]models.Person, error) {
 func (r *PersonRepository) GetAllForUser(userID int) ([]models.Person, error) {
 	persons := []models.Person{}
 	err := r.db.Select(&persons,
-		`SELECT * FROM persons
-		WHERE access = 'public' OR created_by = $1
-			OR id IN (SELECT person_id FROM person_editors WHERE user_id = $1)
-		ORDER BY id`, userID)
+		`SELECT DISTINCT p.* FROM persons p
+		LEFT JOIN person_editors pe ON p.id = pe.person_id AND pe.user_id = $1
+		WHERE p.access = 'public' OR p.created_by = $1 OR pe.user_id IS NOT NULL
+		ORDER BY p.id`, userID)
 	return persons, err
 }
 
@@ -116,9 +116,9 @@ func (r *PersonRepository) IsEditor(personID, userID int) (bool, error) {
 func (r *PersonRepository) CanAccess(personID, userID int) (bool, error) {
 	var count int
 	err := r.db.Get(&count,
-		`SELECT COUNT(*) FROM persons
-		WHERE id = $1 AND (access = 'public' OR created_by = $2
-			OR id IN (SELECT person_id FROM person_editors WHERE user_id = $2))`,
+		`SELECT COUNT(*) FROM persons p
+		LEFT JOIN person_editors pe ON p.id = pe.person_id AND pe.user_id = $2
+		WHERE p.id = $1 AND (p.access = 'public' OR p.created_by = $2 OR pe.user_id IS NOT NULL)`,
 		personID, userID)
 	return count > 0, err
 }

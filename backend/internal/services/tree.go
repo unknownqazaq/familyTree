@@ -21,36 +21,49 @@ func (s *TreeService) GetTree(rootID int, userID int) (*models.TreeNode, error) 
 		return nil, errors.New("person not found")
 	}
 
+	// Fetch all accessible persons once to avoid N+1 queries
+	var allPersons []models.Person
+	if userID > 0 {
+		allPersons, err = s.personRepo.GetAllForUser(userID)
+	} else {
+		allPersons, err = s.personRepo.GetAllPublic()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Build parent-to-children map
+	childrenMap := make(map[int][]models.Person)
+	for _, person := range allPersons {
+		if person.ParentID != nil {
+			childrenMap[*person.ParentID] = append(childrenMap[*person.ParentID], person)
+		}
+	}
+
 	node := &models.TreeNode{
 		ID:       root.ID,
 		Name:     root.Name,
 		ParentID: root.ParentID,
 	}
 
-	s.buildTree(node, 3, userID)
+	s.buildTreeOptimized(node, 3, childrenMap)
 	return node, nil
 }
 
-func (s *TreeService) buildTree(node *models.TreeNode, depth int, userID int) {
+func (s *TreeService) buildTreeOptimized(node *models.TreeNode, depth int, childrenMap map[int][]models.Person) {
 	if depth <= 0 {
 		return
 	}
 
-	children, err := s.personRepo.GetChildren(node.ID)
-	if err != nil {
-		return
-	}
-
+	children := childrenMap[node.ID]
 	for _, child := range children {
-		if child.Access == "public" || (child.CreatedBy != nil && *child.CreatedBy == userID) {
-			childNode := &models.TreeNode{
-				ID:       child.ID,
-				Name:     child.Name,
-				ParentID: child.ParentID,
-			}
-			s.buildTree(childNode, depth-1, userID)
-			node.Children = append(node.Children, childNode)
+		childNode := &models.TreeNode{
+			ID:       child.ID,
+			Name:     child.Name,
+			ParentID: child.ParentID,
 		}
+		s.buildTreeOptimized(childNode, depth-1, childrenMap)
+		node.Children = append(node.Children, childNode)
 	}
 }
 
@@ -88,17 +101,18 @@ func (s *TreeService) FindPath(fromID, toID int) ([]models.PathNode, error) {
 		}
 	}
 
-	// BFS
+	// BFS using efficient queue implementation
 	visited := make(map[int]bool)
 	parent := make(map[int]int)
 	queue := []int{fromID}
 	visited[fromID] = true
 	parent[fromID] = -1
+	queueHead := 0
 
 	found := false
-	for len(queue) > 0 {
-		current := queue[0]
-		queue = queue[1:]
+	for queueHead < len(queue) {
+		current := queue[queueHead]
+		queueHead++
 
 		if current == toID {
 			found = true
