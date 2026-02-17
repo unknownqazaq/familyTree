@@ -37,3 +37,5 @@ CREATE INDEX idx_persons_parent_id ON persons(parent_id);
 CREATE INDEX idx_persons_created_by ON persons(created_by);
 CREATE INDEX idx_persons_name ON persons(name);
 CREATE INDEX idx_persons_access ON persons(access);
+CREATE INDEX idx_person_editors_user_id ON person_editors(user_id);
+CREATE INDEX idx_persons_access_created_by ON persons(access, created_by);
