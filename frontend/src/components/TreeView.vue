@@ -109,13 +109,6 @@ const treeStore = useTreeStore()
 const authStore = useAuthStore()
 const { t, locale } = useI18n()
 
-// Debounce utility for performance optimization
-let renderDebounceTimer = null
-function debounceRender(fn, delay = 16) {
-  if (renderDebounceTimer) clearTimeout(renderDebounceTimer)
-  renderDebounceTimer = setTimeout(fn, delay)
-}
-
 const viewportRef = ref(null)
 const stageRef = ref(null)
 const linesRef = ref(null)
@@ -210,7 +203,7 @@ const personById = computed(() => {
 const childrenByParentId = computed(() => {
   const childrenMap = new Map()
   
-  // Single iteration to build both maps
+  // Two iterations: first to initialize, second to populate
   props.persons.forEach((person) => {
     childrenMap.set(person.id, [])
   })
