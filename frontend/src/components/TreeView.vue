@@ -116,6 +116,8 @@ const mountRef = ref(null)
 const zoomScale = ref(1)
 const baseStageWidth = ref(1600)
 const baseStageHeight = ref(900)
+const contentWidth = ref(0)
+const contentHeight = ref(0)
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1200)
 const suppressNodeClickUntil = ref(0)
 const viewportDragState = reactive({
@@ -160,6 +162,7 @@ const formState = reactive({
 })
 
 const canManage = computed(() => Boolean(authStore.isAuthenticated))
+const canSeeNodeMeta = computed(() => Boolean(authStore.isAdmin))
 const minStageWidth = computed(() => {
   if (windowWidth.value <= 640) return 760
   if (windowWidth.value <= 980) return 1100
@@ -174,7 +177,17 @@ const stageStyle = computed(() => ({
   width: `${Math.max(360, Math.ceil(52 + (baseStageWidth.value - 52) * zoomScale.value))}px`,
   height: `${Math.max(360, Math.ceil(52 + (baseStageHeight.value - 52) * zoomScale.value))}px`,
 }))
+const mountOffsetX = computed(() => {
+  const freeWidth = (baseStageWidth.value - 52 - contentWidth.value) * zoomScale.value
+  return Math.max(0, Math.floor(freeWidth / 2))
+})
+const mountOffsetY = computed(() => {
+  const freeHeight = (baseStageHeight.value - 52 - contentHeight.value) * zoomScale.value
+  return Math.max(0, Math.floor(freeHeight / 2))
+})
 const mountStyle = computed(() => ({
+  left: `${mountOffsetX.value}px`,
+  top: `${mountOffsetY.value}px`,
   transform: `scale(${zoomScale.value})`,
   transformOrigin: 'top left',
 }))
@@ -450,8 +463,13 @@ function scheduleDrawLines() {
 function updateStageBounds() {
   if (!mountRef.value) return
 
-  const nextWidth = Math.max(minStageWidth.value, Math.ceil(mountRef.value.scrollWidth + 52))
-  const nextHeight = Math.max(minStageHeight.value, Math.ceil(mountRef.value.scrollHeight + 52))
+  const nextContentWidth = Math.ceil(mountRef.value.scrollWidth)
+  const nextContentHeight = Math.ceil(mountRef.value.scrollHeight)
+  const nextWidth = Math.max(minStageWidth.value, nextContentWidth + 52)
+  const nextHeight = Math.max(minStageHeight.value, nextContentHeight + 52)
+
+  contentWidth.value = nextContentWidth
+  contentHeight.value = nextContentHeight
 
   baseStageWidth.value = nextWidth
   baseStageHeight.value = nextHeight
@@ -735,10 +753,13 @@ function createNodeRow(nodeId, isRoot = false, path = new Set()) {
     card.appendChild(designation)
   }
 
-  const meta = document.createElement('div')
-  meta.className = 'node-meta'
-  meta.textContent = t('treeMap.meta', { id: person.id, count: childIds.length })
-  card.appendChild(meta)
+if (canSeeNodeMeta.value) {
+    const meta = document.createElement('div')
+    meta.className = 'node-meta'
+    meta.textContent = t('treeMap.meta', { id: person.id, count: childIds.length })
+    card.appendChild(meta)
+  }
+
 
   const accessBadge = document.createElement('span')
   accessBadge.className = `access-badge ${person.access === 'public' ? 'is-public' : 'is-private'}`
@@ -999,6 +1020,10 @@ watch(
 )
 
 watch(canManage, () => {
+  renderMindMap()
+})
+
+watch(canSeeNodeMeta, () => {
   renderMindMap()
 })
 
