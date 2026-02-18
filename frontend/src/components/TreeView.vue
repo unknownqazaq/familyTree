@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="tree-view card">
+  <div ref="treeViewRef" class="tree-view card" :class="{ 'is-fullscreen': isFullscreen }">
     <div class="tree-header">
       <div class="header-copy">
         <h3>{{ t('treeMap.title') }}</h3>
@@ -8,6 +8,9 @@
       <div class="header-controls">
         <button type="button" class="btn-secondary control-btn" @click="centerTree('smooth')">
           {{ t('treeMap.center') }}
+        </button>
+        <button type="button" class="btn-secondary control-btn" @click="toggleFullscreen">
+          {{ isFullscreen ? t('treeMap.fullscreenExit') : t('treeMap.fullscreenEnter') }}
         </button>
         <span class="stats-pill">{{ t('treeMap.nodesCount', { count: persons.length }) }}</span>
       </div>
@@ -109,10 +112,12 @@ const treeStore = useTreeStore()
 const authStore = useAuthStore()
 const { t, locale } = useI18n()
 
+const treeViewRef = ref(null)
 const viewportRef = ref(null)
 const stageRef = ref(null)
 const linesRef = ref(null)
 const mountRef = ref(null)
+const isFullscreen = ref(false)
 const zoomScale = ref(1)
 const baseStageWidth = ref(1600)
 const baseStageHeight = ref(900)
@@ -142,6 +147,7 @@ const touchGestureState = reactive({
   pinchAnchorScrollLeft: 0,
   pinchAnchorScrollTop: 0,
 })
+const pendingFocusRequest = ref(null)
 
 const collapsedNodeIds = ref(new Set())
 const selectedNodeId = ref(null)
@@ -186,9 +192,7 @@ const mountOffsetY = computed(() => {
   return Math.max(0, Math.floor(freeHeight / 2))
 })
 const mountStyle = computed(() => ({
-  left: `${mountOffsetX.value}px`,
-  top: `${mountOffsetY.value}px`,
-  transform: `scale(${zoomScale.value})`,
+  transform: `translate(${mountOffsetX.value}px, ${mountOffsetY.value}px) scale(${zoomScale.value})`,
   transformOrigin: 'top left',
 }))
 
@@ -480,6 +484,39 @@ function clampZoomScale(value) {
   return Math.round(clamped * 100) / 100
 }
 
+function syncFullscreenState() {
+  isFullscreen.value = Boolean(document.fullscreenElement && document.fullscreenElement === treeViewRef.value)
+}
+
+async function toggleFullscreen() {
+  if (!treeViewRef.value) return
+
+  try {
+    if (document.fullscreenElement === treeViewRef.value) {
+      await document.exitFullscreen()
+    } else {
+      await treeViewRef.value.requestFullscreen()
+    }
+  } catch {
+    // ignore browser-level fullscreen errors and keep current mode
+  }
+}
+
+function handleFullscreenChange() {
+  syncFullscreenState()
+  nextTick(() => {
+    updateStageBounds()
+    scheduleDrawLines()
+    const targetId =
+      selectedNodeId.value != null && personById.value.has(selectedNodeId.value)
+        ? selectedNodeId.value
+        : rootIds.value[0]
+    if (targetId != null) {
+      focusNode(targetId, 'auto', 'both')
+    }
+  })
+}
+
 function getTouchDistance(firstTouch, secondTouch) {
   const deltaX = firstTouch.clientX - secondTouch.clientX
   const deltaY = firstTouch.clientY - secondTouch.clientY
@@ -633,10 +670,48 @@ function stopTouchGesture() {
   }
 }
 
+function syncSelectedNodeClass() {
+  if (!mountRef.value) return
+
+  const selectedClass = 'selected-node'
+  mountRef.value.querySelectorAll(`.tree-node.${selectedClass}`).forEach((nodeEl) => {
+    nodeEl.classList.remove(selectedClass)
+  })
+
+  if (selectedNodeId.value == null) return
+  const target = mountRef.value.querySelector(`.tree-node[data-node-id="${selectedNodeId.value}"]`)
+  if (target) {
+    target.classList.add(selectedClass)
+  }
+}
+
+function animateLinesDuringTransition(duration = 340) {
+  const startedAt = performance.now()
+
+  const tick = (now) => {
+    drawLines()
+    if (now - startedAt < duration) {
+      requestAnimationFrame(tick)
+    }
+  }
+
+  requestAnimationFrame(tick)
+}
+
+function updateRowToggleControl(row, isCollapsed) {
+  const toggleButton = row.querySelector(':scope > .tree-node .icon-btn.toggle-btn')
+  if (!toggleButton) return
+
+  toggleButton.textContent = isCollapsed ? '\u25B8' : '\u25BE'
+  toggleButton.title = isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')
+}
+
 function handleSelectNode(nodeId) {
   selectedNodeId.value = nodeId
   emit('node-click', nodeId)
-  renderMindMap()
+  syncSelectedNodeClass()
+  requestNodeFocus(nodeId, 'smooth', 'both')
+  flushPendingFocus()
 }
 
 function toggleNode(nodeId) {
@@ -649,7 +724,18 @@ function toggleNode(nodeId) {
   }
 
   collapsedNodeIds.value = next
-  renderMindMap()
+  const row = mountRef.value?.querySelector(`.tree-row[data-node-id="${nodeId}"]`) || null
+  const isCollapsed = next.has(nodeId)
+  if (row) {
+    row.classList.toggle('collapsed', isCollapsed)
+    updateRowToggleControl(row, isCollapsed)
+    animateLinesDuringTransition(360)
+  } else {
+    renderMindMap()
+  }
+
+  requestNodeFocus(nodeId, 'smooth', 'both')
+  flushPendingFocus()
 }
 
 function createNodeRow(nodeId, isRoot = false, path = new Set()) {
@@ -801,7 +887,9 @@ function renderMindMap() {
   })
 
   updateStageBounds()
+  syncSelectedNodeClass()
   scheduleDrawLines()
+  flushPendingFocus()
 }
 
 function drawLines() {
@@ -856,31 +944,53 @@ function drawLines() {
   })
 }
 
-function centerTree(behavior = 'smooth') {
-  if (!viewportRef.value || !mountRef.value) return
+function requestNodeFocus(nodeId, behavior = 'smooth', axis = 'both') {
+  if (nodeId == null) return
+  pendingFocusRequest.value = { nodeId, behavior, axis }
+}
 
+function focusNode(nodeId, behavior = 'smooth', axis = 'both') {
+  if (!viewportRef.value || !mountRef.value || nodeId == null) return
+
+  const card = mountRef.value.querySelector(`.tree-node[data-node-id="${nodeId}"]`)
+  if (!card) return
+
+  const viewport = viewportRef.value
+  const cardRect = card.getBoundingClientRect()
+  const viewportRect = viewport.getBoundingClientRect()
+  const deltaLeft = cardRect.left - viewportRect.left + cardRect.width / 2 - viewportRect.width / 2
+  const deltaTop = cardRect.top - viewportRect.top + cardRect.height / 2 - viewportRect.height / 2
+
+  const maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth)
+  const maxTop = Math.max(0, viewport.scrollHeight - viewport.clientHeight)
+  const targetLeft = Math.min(maxLeft, Math.max(0, viewport.scrollLeft + deltaLeft))
+  const targetTop = Math.min(maxTop, Math.max(0, viewport.scrollTop + deltaTop))
+
+  viewport.scrollTo({
+    left: axis === 'both' || axis === 'x' ? targetLeft : viewport.scrollLeft,
+    top: axis === 'both' || axis === 'y' ? targetTop : viewport.scrollTop,
+    behavior,
+  })
+}
+
+function flushPendingFocus() {
+  if (!pendingFocusRequest.value) return
+  const { nodeId, behavior, axis } = pendingFocusRequest.value
+  pendingFocusRequest.value = null
+
+  requestAnimationFrame(() => {
+    focusNode(nodeId, behavior, axis)
+  })
+}
+
+function centerTree(behavior = 'smooth') {
   const targetId =
     selectedNodeId.value != null && personById.value.has(selectedNodeId.value)
       ? selectedNodeId.value
       : rootIds.value[0]
 
   if (targetId == null) return
-
-  const card = mountRef.value.querySelector(`.tree-node[data-node-id="${targetId}"]`)
-  if (!card) return
-
-  const cardRect = card.getBoundingClientRect()
-  const viewportRect = viewportRef.value.getBoundingClientRect()
-
-  const targetLeft = viewportRef.value.scrollLeft + (cardRect.left - viewportRect.left) - 60
-  const targetTop =
-    viewportRef.value.scrollTop + (cardRect.top - viewportRect.top) - viewportRect.height / 2 + cardRect.height / 2
-
-  viewportRef.value.scrollTo({
-    left: Math.max(0, targetLeft),
-    top: Math.max(0, targetTop),
-    behavior,
-  })
+  focusNode(targetId, behavior, 'both')
 }
 
 function handleViewportScroll() {
@@ -1056,6 +1166,7 @@ onMounted(() => {
   window.addEventListener('mousemove', handleWindowMouseMove)
   window.addEventListener('mouseup', handleWindowMouseUp)
   window.addEventListener('blur', handleWindowMouseUp)
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
 
   if (typeof ResizeObserver !== 'undefined' && stageRef.value) {
     resizeObserver = new ResizeObserver(() => {
@@ -1069,6 +1180,7 @@ onMounted(() => {
   }
 
   renderMindMap()
+  syncFullscreenState()
 })
 
 onUnmounted(() => {
@@ -1086,6 +1198,7 @@ onUnmounted(() => {
   window.removeEventListener('mousemove', handleWindowMouseMove)
   window.removeEventListener('mouseup', handleWindowMouseUp)
   window.removeEventListener('blur', handleWindowMouseUp)
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
   stopViewportDrag()
   stopTouchGesture()
 
@@ -1130,6 +1243,31 @@ onUnmounted(() => {
     linear-gradient(175deg, var(--panel), rgba(241, 245, 249, 0.84));
   color: var(--text);
   backdrop-filter: blur(8px);
+}
+
+.tree-view:fullscreen {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+  padding: 14px;
+}
+
+.tree-view.is-fullscreen {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border-radius: 0;
+}
+
+.tree-view:fullscreen .tree-viewport {
+  height: calc(100vh - 120px);
+  border-radius: 14px;
+}
+
+.tree-view.is-fullscreen .tree-viewport {
+  height: calc(100vh - 120px);
 }
 
 .tree-header {
@@ -1245,12 +1383,15 @@ onUnmounted(() => {
 
 .tree-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--gap-x);
 }
 
 .tree-row.collapsed > .tree-children {
-  display: none;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
 }
 
 .tree-children {
@@ -1258,6 +1399,15 @@ onUnmounted(() => {
   flex-direction: column;
   gap: var(--gap-y);
   padding-top: 2px;
+  overflow: hidden;
+  max-height: 20000px;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    max-height 0.34s cubic-bezier(0.25, 0.8, 0.25, 1),
+    opacity 0.22s ease,
+    transform 0.22s ease;
+  will-change: max-height, opacity, transform;
 }
 
 .tree-node {
