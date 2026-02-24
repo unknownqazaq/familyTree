@@ -16,10 +16,36 @@
       </div>
     </div>
 
-    <div ref="viewportRef" class="tree-viewport">
-      <div ref="stageRef" class="tree-stage" :style="stageStyle">
-        <svg ref="linesRef" class="tree-lines"></svg>
-        <div ref="mountRef" class="tree-mount" :style="mountStyle"></div>
+    <div ref="viewportRef" class="tree-viewport" :class="{ 'is-dragging': gestures.isDragging.value }">
+      <div ref="sceneRef" class="tree-scene" :style="sceneStyle">
+        <svg class="tree-lines" :style="svgStyle">
+          <path
+            v-for="edge in layoutEdges"
+            :key="edge.id"
+            :d="buildBezierPath(edge)"
+            class="tree-edge"
+          />
+        </svg>
+        <TransitionGroup name="node" tag="div" class="tree-nodes">
+          <TreeNode
+            v-for="node in layoutNodes"
+            :key="node.id"
+            :style="{ position: 'absolute', left: node.x + 'px', top: node.y + 'px' }"
+            :person="node.person"
+            :isSelected="node.id === selectedNodeId"
+            :isCollapsed="node.isCollapsed"
+            :hasChildren="node.hasChildren"
+            :depth="node.depth"
+            :canManage="canManage"
+            :canSeeNodeMeta="canSeeNodeMeta"
+            :suppressClickUntil="gestures.suppressNodeClickUntil.value"
+            @click="handleSelectNode(node.id)"
+            @toggle="toggleNode(node.id)"
+            @add="modal.openAddModal(node.id)"
+            @edit="modal.openEditModal(node.id)"
+            @delete="modal.openDeleteModal(node.id)"
+          />
+        </TransitionGroup>
       </div>
     </div>
 
@@ -98,889 +124,116 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useTreeStore } from '../stores/tree'
+import { useTreeLayout, NODE_W, NODE_H } from '../composables/useTreeLayout.js'
+import { useTreeViewModal } from '../composables/useTreeViewModal.js'
+import {
+  MOBILE_ZOOM_SCALE,
+  TABLET_ZOOM_SCALE,
+  useViewportGestures,
+} from '../composables/useViewportGestures.js'
+import {
+  buildAncestorIds,
+  buildChildrenByParentId,
+  buildPersonById,
+  buildRootIds,
+  computeNextCollapsedState,
+} from '../utils/treeUtils.js'
+import TreeNode from './TreeNode.vue'
 
-const props = defineProps({
-  persons: { type: Array, default: () => [] },
-})
+const props = defineProps({ persons: { type: Array, default: () => [] } })
+const emit  = defineEmits(['node-click'])
 
-const emit = defineEmits(['node-click'])
-const treeStore = useTreeStore()
-const authStore = useAuthStore()
+const treeStore  = useTreeStore()
+const authStore  = useAuthStore()
 const { t, locale } = useI18n()
 
+// ─── DOM refs ──────────────────────────────────────────────────────────────────
 const treeViewRef = ref(null)
 const viewportRef = ref(null)
-const stageRef = ref(null)
-const linesRef = ref(null)
-const mountRef = ref(null)
-const isFullscreen = ref(false)
-const zoomScale = ref(1)
-const baseStageWidth = ref(1600)
-const baseStageHeight = ref(900)
-const contentWidth = ref(0)
-const contentHeight = ref(0)
-const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1200)
-const suppressNodeClickUntil = ref(0)
-const viewportDragState = reactive({
-  active: false,
-  moved: false,
-  startX: 0,
-  startY: 0,
-  startScrollLeft: 0,
-  startScrollTop: 0,
-})
-const touchGestureState = reactive({
-  mode: 'none',
-  moved: false,
-  panStartX: 0,
-  panStartY: 0,
-  panStartScrollLeft: 0,
-  panStartScrollTop: 0,
-  pinchStartDistance: 0,
-  pinchStartScale: 1,
-  pinchAnchorX: 0,
-  pinchAnchorY: 0,
-  pinchAnchorScrollLeft: 0,
-  pinchAnchorScrollTop: 0,
-})
-const pendingFocusRequest = ref(null)
+const sceneRef    = ref(null)
 
+// ─── Viewport / window state ───────────────────────────────────────────────────
+const isFullscreen    = ref(false)
+const windowWidth     = ref(typeof window !== 'undefined' ? window.innerWidth : 1200)
+
+// ─── Tree navigation state ─────────────────────────────────────────────────────
 const collapsedNodeIds = ref(new Set())
-const selectedNodeId = ref(null)
-const modalState = ref(null)
-const activeNodeId = ref(null)
-const mutationLoading = ref(false)
-const mutationError = ref('')
-const knownNodeIds = ref(new Set())
-const autoCentered = ref(false)
+const selectedNodeId   = ref(null)
+const knownNodeIds     = ref(new Set())
+const autoCentered     = ref(false)
+const panTransitioning = ref(false)
+let   panTransitionTimeout = null
 
-const formState = reactive({
-  name: '',
-  parent_id: '',
-  designation: '',
-  reference: '',
-  history: '',
-  access: 'private',
+// ─── Layout (d3-hierarchy based) ───────────────────────────────────────────────
+const layout = useTreeLayout(computed(() => props.persons), collapsedNodeIds)
+const { layoutNodes, layoutEdges, sceneBounds, personById, childrenByParentId, rootIds } = layout
+
+// ─── Gestures (CSS transform pan + zoom) ──────────────────────────────────────
+const gestures = useViewportGestures({
+  viewportRef,
+  isInteractionEnabled: () => Boolean(viewportRef.value) && props.persons.length > 0,
 })
 
-const canManage = computed(() => Boolean(authStore.isAuthenticated))
+// ─── Permissions ──────────────────────────────────────────────────────────────
+const canManage      = computed(() => Boolean(authStore.isAuthenticated))
 const canSeeNodeMeta = computed(() => Boolean(authStore.isAdmin))
-const minStageWidth = computed(() => {
-  if (windowWidth.value <= 640) return 760
-  if (windowWidth.value <= 980) return 1100
-  return 1600
+
+// ─── Modal ─────────────────────────────────────────────────────────────────────
+const modal = useTreeViewModal({
+  authStore,
+  treeStore,
+  t,
+  persons:            computed(() => props.persons),
+  personById,
+  childrenByParentId,
+  selectedNodeId,
+  emit,
 })
-const minStageHeight = computed(() => {
-  if (windowWidth.value <= 640) return 620
-  if (windowWidth.value <= 980) return 720
-  return 900
-})
-const stageStyle = computed(() => ({
-  width: `${Math.max(360, Math.ceil(52 + (baseStageWidth.value - 52) * zoomScale.value))}px`,
-  height: `${Math.max(360, Math.ceil(52 + (baseStageHeight.value - 52) * zoomScale.value))}px`,
-}))
-const mountOffsetX = computed(() => {
-  const freeWidth = (baseStageWidth.value - 52 - contentWidth.value) * zoomScale.value
-  return Math.max(0, Math.floor(freeWidth / 2))
-})
-const mountOffsetY = computed(() => {
-  const freeHeight = (baseStageHeight.value - 52 - contentHeight.value) * zoomScale.value
-  return Math.max(0, Math.floor(freeHeight / 2))
-})
-const mountStyle = computed(() => ({
-  transform: `translate(${mountOffsetX.value}px, ${mountOffsetY.value}px) scale(${zoomScale.value})`,
-  transformOrigin: 'top left',
+const { modalState, formState, parentOptions, activePerson, activeChildrenCount,
+        mutationLoading, mutationError, closeModal, submitPersonForm, confirmDelete } = modal
+
+// ─── Scene styles ─────────────────────────────────────────────────────────────
+const sceneStyle = computed(() => ({
+  width:     `${sceneBounds.value.width}px`,
+  height:    `${sceneBounds.value.height}px`,
+  transform: `translate(${gestures.panX.value}px, ${gestures.panY.value}px) scale(${gestures.zoomScale.value})`,
+  transition: panTransitioning.value ? 'transform 0.42s cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none',
 }))
 
-const personById = computed(() => {
-  const map = new Map()
-  props.persons.forEach((person) => {
-    map.set(person.id, person)
-  })
-  return map
-})
+const svgStyle = computed(() => ({
+  position:      'absolute',
+  inset:         '0',
+  width:         '100%',
+  height:        '100%',
+  pointerEvents: 'none',
+  overflow:      'visible',
+}))
 
-const childrenByParentId = computed(() => {
-  const map = new Map()
+// ─── Bezier edge path builder ──────────────────────────────────────────────────
+function buildBezierPath(edge) {
+  const midX = (edge.x1 + edge.x2) / 2
+  return `M ${edge.x1} ${edge.y1} C ${midX} ${edge.y1}, ${midX} ${edge.y2}, ${edge.x2} ${edge.y2}`
+}
 
-  props.persons.forEach((person) => {
-    map.set(person.id, [])
-  })
+// ─── Focus / center helpers ────────────────────────────────────────────────────
+function focusNode(nodeId, behavior = 'smooth') {
+  const node = layoutNodes.value.find((n) => n.id === nodeId)
+  if (!node || !viewportRef.value) return
+  const vp         = viewportRef.value
+  const targetPanX = vp.clientWidth  / 2 - (node.x + NODE_W / 2) * gestures.zoomScale.value
+  const targetPanY = vp.clientHeight / 2 - (node.y + NODE_H / 2) * gestures.zoomScale.value
 
-  props.persons.forEach((person) => {
-    if (person.parent_id != null && map.has(person.parent_id)) {
-      map.get(person.parent_id).push(person.id)
-    }
-  })
-
-  return map
-})
-
-const rootIds = computed(() => {
-  const roots = props.persons
-    .filter((person) => person.parent_id == null || !personById.value.has(person.parent_id))
-    .map((person) => person.id)
-
-  if (roots.length === 0 && props.persons.length > 0) {
-    roots.push(props.persons[0].id)
+  if (behavior === 'smooth') {
+    panTransitioning.value = true
+    clearTimeout(panTransitionTimeout)
+    panTransitionTimeout = setTimeout(() => { panTransitioning.value = false }, 450)
   }
-
-  return roots
-})
-
-const activePerson = computed(() => {
-  if (activeNodeId.value == null) return null
-  return personById.value.get(activeNodeId.value) || null
-})
-
-const activeChildrenCount = computed(() => {
-  if (activeNodeId.value == null) return 0
-  return (childrenByParentId.value.get(activeNodeId.value) || []).length
-})
-
-function collectDescendantIds(nodeId, collected = new Set()) {
-  const children = childrenByParentId.value.get(nodeId) || []
-
-  children.forEach((childId) => {
-    if (collected.has(childId)) return
-    collected.add(childId)
-    collectDescendantIds(childId, collected)
-  })
-
-  return collected
-}
-
-const blockedParentIds = computed(() => {
-  if (modalState.value !== 'edit' || activeNodeId.value == null) return new Set()
-
-  const blocked = collectDescendantIds(activeNodeId.value)
-  blocked.add(activeNodeId.value)
-  return blocked
-})
-
-const parentOptions = computed(() => {
-  const blocked = blockedParentIds.value
-
-  return [...props.persons]
-    .filter((person) => !blocked.has(person.id))
-    .sort((a, b) => a.name.localeCompare(b.name))
-})
-
-let lineFrameId = null
-let resizeObserver = null
-const MIN_ZOOM_SCALE = 0.55
-const MAX_ZOOM_SCALE = 2.2
-const ZOOM_STEP = 0.1
-const MOBILE_ZOOM_SCALE = 1
-const TABLET_ZOOM_SCALE = 0.95
-
-function resetFormState() {
-  formState.name = ''
-  formState.parent_id = ''
-  formState.designation = ''
-  formState.reference = ''
-  formState.history = ''
-  formState.access = 'private'
-}
-
-function openAddModal(nodeId) {
-  if (!canManage.value) return
-
-  mutationError.value = ''
-  activeNodeId.value = nodeId
-  modalState.value = 'add'
-  resetFormState()
-
-  const parent = personById.value.get(nodeId)
-  formState.parent_id = String(nodeId)
-  formState.access = parent?.access || 'private'
-}
-
-function openEditModal(nodeId) {
-  if (!canManage.value) return
-
-  const person = personById.value.get(nodeId)
-  if (!person) return
-
-  mutationError.value = ''
-  activeNodeId.value = nodeId
-  modalState.value = 'edit'
-
-  formState.name = person.name || ''
-  formState.parent_id = person.parent_id == null ? '' : String(person.parent_id)
-  formState.designation = person.designation || ''
-  formState.reference = person.reference || ''
-  formState.history = person.history || ''
-  formState.access = person.access || 'private'
-}
-
-function openDeleteModal(nodeId) {
-  if (!canManage.value) return
-
-  mutationError.value = ''
-  activeNodeId.value = nodeId
-  modalState.value = 'delete'
-}
-
-function closeModal(force = false) {
-  if (mutationLoading.value && !force) return
-
-  modalState.value = null
-  activeNodeId.value = null
-  mutationError.value = ''
-  resetFormState()
-}
-
-function normalizeOptionalField(value) {
-  const normalized = String(value || '').trim()
-  return normalized.length > 0 ? normalized : null
-}
-
-function buildFormPayload() {
-  return {
-    name: formState.name.trim(),
-    parent_id: formState.parent_id === '' ? null : Number(formState.parent_id),
-    designation: normalizeOptionalField(formState.designation),
-    reference: normalizeOptionalField(formState.reference),
-    history: normalizeOptionalField(formState.history),
-    access: formState.access === 'public' ? 'public' : 'private',
-  }
-}
-
-async function submitPersonForm() {
-  if (mutationLoading.value || !canManage.value) return
-
-  mutationError.value = ''
-
-  const payload = buildFormPayload()
-  if (!payload.name) {
-    mutationError.value = t('treeMap.validationError')
-    return
-  }
-
-  if (payload.parent_id != null && (!Number.isInteger(payload.parent_id) || payload.parent_id <= 0)) {
-    mutationError.value = t('treeMap.validationError')
-    return
-  }
-
-  if (modalState.value === 'edit' && payload.parent_id != null && blockedParentIds.value.has(payload.parent_id)) {
-    mutationError.value = t('treeMap.validationError')
-    return
-  }
-
-  mutationLoading.value = true
-
-  try {
-    if (modalState.value === 'add') {
-      const created = await treeStore.createPerson(payload)
-      if (created?.id) {
-        selectedNodeId.value = created.id
-        emit('node-click', created.id)
-      }
-    } else if (modalState.value === 'edit' && activeNodeId.value != null) {
-      await treeStore.updatePerson(activeNodeId.value, payload)
-      selectedNodeId.value = activeNodeId.value
-      emit('node-click', activeNodeId.value)
-    }
-
-    await treeStore.fetchFullTree()
-    closeModal(true)
-  } catch (error) {
-    if (error?.response?.status === 403) {
-      mutationError.value = t('treeMap.forbidden')
-    } else {
-      mutationError.value = error?.response?.data?.error || t('treeMap.saveFailed')
-    }
-  } finally {
-    mutationLoading.value = false
-  }
-}
-
-async function confirmDelete() {
-  if (mutationLoading.value || !canManage.value || activeNodeId.value == null) return
-
-  mutationLoading.value = true
-  mutationError.value = ''
-
-  try {
-    const deletingId = activeNodeId.value
-    await treeStore.deletePerson(deletingId)
-    await treeStore.fetchFullTree()
-
-    if (selectedNodeId.value === deletingId) {
-      selectedNodeId.value = null
-    }
-
-    closeModal(true)
-  } catch (error) {
-    if (error?.response?.status === 403) {
-      mutationError.value = t('treeMap.forbidden')
-    } else {
-      mutationError.value = error?.response?.data?.error || t('treeMap.deleteFailed')
-    }
-  } finally {
-    mutationLoading.value = false
-  }
-}
-
-function syncCollapsedState() {
-  const previousCollapsed = collapsedNodeIds.value
-  const previousKnown = knownNodeIds.value
-  const nextCollapsed = new Set()
-  const roots = new Set(rootIds.value)
-
-  props.persons.forEach((person) => {
-    const hasChildren = (childrenByParentId.value.get(person.id) || []).length > 0
-    if (!hasChildren) return
-
-    if (previousKnown.has(person.id)) {
-      if (previousCollapsed.has(person.id)) {
-        nextCollapsed.add(person.id)
-      }
-      return
-    }
-
-    if (!roots.has(person.id)) {
-      nextCollapsed.add(person.id)
-    }
-  })
-
-  collapsedNodeIds.value = nextCollapsed
-  knownNodeIds.value = new Set(props.persons.map((person) => person.id))
-}
-
-function scheduleDrawLines() {
-  if (lineFrameId != null) {
-    cancelAnimationFrame(lineFrameId)
-  }
-
-  lineFrameId = requestAnimationFrame(() => {
-    lineFrameId = null
-    drawLines()
-  })
-}
-
-function updateStageBounds() {
-  if (!mountRef.value) return
-
-  const nextContentWidth = Math.ceil(mountRef.value.scrollWidth)
-  const nextContentHeight = Math.ceil(mountRef.value.scrollHeight)
-  const nextWidth = Math.max(minStageWidth.value, nextContentWidth + 52)
-  const nextHeight = Math.max(minStageHeight.value, nextContentHeight + 52)
-
-  contentWidth.value = nextContentWidth
-  contentHeight.value = nextContentHeight
-
-  baseStageWidth.value = nextWidth
-  baseStageHeight.value = nextHeight
-}
-
-function clampZoomScale(value) {
-  const clamped = Math.min(MAX_ZOOM_SCALE, Math.max(MIN_ZOOM_SCALE, value))
-  return Math.round(clamped * 100) / 100
-}
-
-function syncFullscreenState() {
-  isFullscreen.value = Boolean(document.fullscreenElement && document.fullscreenElement === treeViewRef.value)
-}
-
-async function toggleFullscreen() {
-  if (!treeViewRef.value) return
-
-  try {
-    if (document.fullscreenElement === treeViewRef.value) {
-      await document.exitFullscreen()
-    } else {
-      await treeViewRef.value.requestFullscreen()
-    }
-  } catch {
-    // ignore browser-level fullscreen errors and keep current mode
-  }
-}
-
-function handleFullscreenChange() {
-  syncFullscreenState()
-  nextTick(() => {
-    updateStageBounds()
-    scheduleDrawLines()
-    const targetId =
-      selectedNodeId.value != null && personById.value.has(selectedNodeId.value)
-        ? selectedNodeId.value
-        : rootIds.value[0]
-    if (targetId != null) {
-      focusNode(targetId, 'auto', 'both')
-    }
-  })
-}
-
-function getTouchDistance(firstTouch, secondTouch) {
-  const deltaX = firstTouch.clientX - secondTouch.clientX
-  const deltaY = firstTouch.clientY - secondTouch.clientY
-  return Math.hypot(deltaX, deltaY)
-}
-
-function getTouchCenter(firstTouch, secondTouch, viewportRect) {
-  return {
-    x: (firstTouch.clientX + secondTouch.clientX) / 2 - viewportRect.left,
-    y: (firstTouch.clientY + secondTouch.clientY) / 2 - viewportRect.top,
-  }
-}
-
-function createIconButton({ title, text, className, onClick }) {
-  const button = document.createElement('button')
-  button.type = 'button'
-  button.className = `icon-btn ${className || ''}`.trim()
-  button.title = title
-  button.textContent = text
-
-  button.addEventListener('click', (event) => {
-    event.stopPropagation()
-    onClick()
-  })
-
-  return button
-}
-
-function startViewportDrag(event) {
-  if (event.button !== 0 || !viewportRef.value) return
-  const targetElement = event.target instanceof Element ? event.target : null
-  if (targetElement?.closest('.icon-btn')) return
-
-  viewportDragState.active = true
-  viewportDragState.moved = false
-  viewportDragState.startX = event.clientX
-  viewportDragState.startY = event.clientY
-  viewportDragState.startScrollLeft = viewportRef.value.scrollLeft
-  viewportDragState.startScrollTop = viewportRef.value.scrollTop
-
-  viewportRef.value.classList.add('is-dragging')
-  document.body.style.userSelect = 'none'
-  event.preventDefault()
-}
-
-function moveViewportDrag(event) {
-  if (!viewportDragState.active || !viewportRef.value) return
-
-  const deltaX = event.clientX - viewportDragState.startX
-  const deltaY = event.clientY - viewportDragState.startY
-  if (!viewportDragState.moved && (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2)) {
-    viewportDragState.moved = true
-  }
-
-  viewportRef.value.scrollLeft = viewportDragState.startScrollLeft - deltaX
-  viewportRef.value.scrollTop = viewportDragState.startScrollTop - deltaY
-  event.preventDefault()
-}
-
-function stopViewportDrag() {
-  if (!viewportDragState.active) return
-
-  if (viewportDragState.moved) {
-    suppressNodeClickUntil.value = Date.now() + 180
-  }
-
-  viewportDragState.active = false
-  viewportDragState.moved = false
-
-  if (viewportRef.value) {
-    viewportRef.value.classList.remove('is-dragging')
-  }
-  document.body.style.userSelect = ''
-}
-
-function startTouchPan(touch) {
-  if (!viewportRef.value) return
-
-  touchGestureState.mode = 'pan'
-  touchGestureState.moved = false
-  touchGestureState.panStartX = touch.clientX
-  touchGestureState.panStartY = touch.clientY
-  touchGestureState.panStartScrollLeft = viewportRef.value.scrollLeft
-  touchGestureState.panStartScrollTop = viewportRef.value.scrollTop
-  viewportRef.value.classList.add('is-dragging')
-}
-
-function moveTouchPan(touch) {
-  if (!viewportRef.value || touchGestureState.mode !== 'pan') return
-
-  const deltaX = touch.clientX - touchGestureState.panStartX
-  const deltaY = touch.clientY - touchGestureState.panStartY
-  if (!touchGestureState.moved && (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2)) {
-    touchGestureState.moved = true
-  }
-
-  if (!touchGestureState.moved) return false
-
-  viewportRef.value.scrollLeft = touchGestureState.panStartScrollLeft - deltaX
-  viewportRef.value.scrollTop = touchGestureState.panStartScrollTop - deltaY
-  scheduleDrawLines()
-  return true
-}
-
-function startTouchPinch(firstTouch, secondTouch) {
-  if (!viewportRef.value) return
-
-  const viewportRect = viewportRef.value.getBoundingClientRect()
-  const center = getTouchCenter(firstTouch, secondTouch, viewportRect)
-
-  touchGestureState.mode = 'pinch'
-  touchGestureState.moved = true
-  touchGestureState.pinchStartDistance = Math.max(1, getTouchDistance(firstTouch, secondTouch))
-  touchGestureState.pinchStartScale = zoomScale.value
-  touchGestureState.pinchAnchorX = center.x
-  touchGestureState.pinchAnchorY = center.y
-  touchGestureState.pinchAnchorScrollLeft = viewportRef.value.scrollLeft
-  touchGestureState.pinchAnchorScrollTop = viewportRef.value.scrollTop
-}
-
-function moveTouchPinch(firstTouch, secondTouch) {
-  if (!viewportRef.value || touchGestureState.mode !== 'pinch') return
-
-  const viewport = viewportRef.value
-  const currentDistance = Math.max(1, getTouchDistance(firstTouch, secondTouch))
-  const scaleRatio = currentDistance / touchGestureState.pinchStartDistance
-  const nextScale = clampZoomScale(touchGestureState.pinchStartScale * scaleRatio)
-  if (nextScale === zoomScale.value) return
-
-  const anchorStageX = touchGestureState.pinchAnchorScrollLeft + touchGestureState.pinchAnchorX
-  const anchorStageY = touchGestureState.pinchAnchorScrollTop + touchGestureState.pinchAnchorY
-  const ratio = nextScale / zoomScale.value
-
-  zoomScale.value = nextScale
-  updateStageBounds()
-  viewport.scrollLeft = Math.max(0, anchorStageX * ratio - touchGestureState.pinchAnchorX)
-  viewport.scrollTop = Math.max(0, anchorStageY * ratio - touchGestureState.pinchAnchorY)
-  scheduleDrawLines()
-}
-
-function stopTouchGesture() {
-  if (touchGestureState.moved) {
-    suppressNodeClickUntil.value = Date.now() + 220
-  }
-
-  touchGestureState.mode = 'none'
-  touchGestureState.moved = false
-
-  if (viewportRef.value) {
-    viewportRef.value.classList.remove('is-dragging')
-  }
-}
-
-function syncSelectedNodeClass() {
-  if (!mountRef.value) return
-
-  const selectedClass = 'selected-node'
-  mountRef.value.querySelectorAll(`.tree-node.${selectedClass}`).forEach((nodeEl) => {
-    nodeEl.classList.remove(selectedClass)
-  })
-
-  if (selectedNodeId.value == null) return
-  const target = mountRef.value.querySelector(`.tree-node[data-node-id="${selectedNodeId.value}"]`)
-  if (target) {
-    target.classList.add(selectedClass)
-  }
-}
-
-function animateLinesDuringTransition(duration = 340) {
-  const startedAt = performance.now()
-
-  const tick = (now) => {
-    drawLines()
-    if (now - startedAt < duration) {
-      requestAnimationFrame(tick)
-    }
-  }
-
-  requestAnimationFrame(tick)
-}
-
-function updateRowToggleControl(row, isCollapsed) {
-  const toggleButton = row.querySelector(':scope > .tree-node .icon-btn.toggle-btn')
-  if (!toggleButton) return
-
-  toggleButton.textContent = isCollapsed ? '\u25B8' : '\u25BE'
-  toggleButton.title = isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')
-}
-
-function handleSelectNode(nodeId) {
-  selectedNodeId.value = nodeId
-  emit('node-click', nodeId)
-  syncSelectedNodeClass()
-  requestNodeFocus(nodeId, 'smooth', 'both')
-  flushPendingFocus()
-}
-
-function toggleNode(nodeId) {
-  const next = new Set(collapsedNodeIds.value)
-
-  if (next.has(nodeId)) {
-    next.delete(nodeId)
-  } else {
-    next.add(nodeId)
-  }
-
-  collapsedNodeIds.value = next
-  const row = mountRef.value?.querySelector(`.tree-row[data-node-id="${nodeId}"]`) || null
-  const isCollapsed = next.has(nodeId)
-  if (row) {
-    row.classList.toggle('collapsed', isCollapsed)
-    updateRowToggleControl(row, isCollapsed)
-    animateLinesDuringTransition(360)
-  } else {
-    renderMindMap()
-  }
-
-  requestNodeFocus(nodeId, 'smooth', 'both')
-  flushPendingFocus()
-}
-
-function createNodeRow(nodeId, isRoot = false, path = new Set()) {
-  if (path.has(nodeId)) return null
-
-  const person = personById.value.get(nodeId)
-  if (!person) return null
-
-  const nextPath = new Set(path)
-  nextPath.add(nodeId)
-
-  const childIds = childrenByParentId.value.get(nodeId) || []
-  const hasChildren = childIds.length > 0
-  const isCollapsed = collapsedNodeIds.value.has(nodeId)
-
-  const row = document.createElement('div')
-  row.className = 'tree-row'
-  row.dataset.nodeId = String(nodeId)
-  if (isCollapsed) {
-    row.classList.add('collapsed')
-  }
-
-  const card = document.createElement('div')
-  card.className = [
-    'tree-node',
-    isRoot ? 'root-node' : '',
-    selectedNodeId.value === nodeId ? 'selected-node' : '',
-  ]
-    .filter(Boolean)
-    .join(' ')
-  card.dataset.nodeId = String(nodeId)
-
-  const top = document.createElement('div')
-  top.className = 'node-top'
-
-  const labelLine = document.createElement('div')
-  labelLine.className = 'label-line'
-
-  const dot = document.createElement('div')
-  dot.className = 'node-dot'
-
-  const label = document.createElement('div')
-  label.className = 'node-label'
-  label.textContent = person.name
-
-  labelLine.appendChild(dot)
-  labelLine.appendChild(label)
-
-  const actions = document.createElement('div')
-  actions.className = 'node-actions'
-
-  if (canManage.value) {
-    actions.appendChild(
-      createIconButton({
-        title: t('treeMap.addChild'),
-        text: '+',
-        className: 'add-btn',
-        onClick: () => openAddModal(nodeId),
-      })
-    )
-
-    actions.appendChild(
-      createIconButton({
-        title: t('treeMap.editNode'),
-        text: '\u270E',
-        className: 'edit-btn',
-        onClick: () => openEditModal(nodeId),
-      })
-    )
-
-    actions.appendChild(
-      createIconButton({
-        title: t('treeMap.deleteNode'),
-        text: '\u2715',
-        className: 'danger-btn',
-        onClick: () => openDeleteModal(nodeId),
-      })
-    )
-  }
-
-  if (hasChildren) {
-    actions.appendChild(
-      createIconButton({
-        title: isCollapsed ? t('treeMap.expand') : t('treeMap.collapse'),
-        text: isCollapsed ? '\u25B8' : '\u25BE',
-        className: 'toggle-btn',
-        onClick: () => toggleNode(nodeId),
-      })
-    )
-  }
-
-  top.appendChild(labelLine)
-  top.appendChild(actions)
-
-  card.appendChild(top)
-
-  if (person.designation) {
-    const designation = document.createElement('div')
-    designation.className = 'node-designation'
-    designation.textContent = person.designation
-    card.appendChild(designation)
-  }
-
-if (canSeeNodeMeta.value) {
-    const meta = document.createElement('div')
-    meta.className = 'node-meta'
-    meta.textContent = t('treeMap.meta', { id: person.id, count: childIds.length })
-    card.appendChild(meta)
-  }
-
-
-  const accessBadge = document.createElement('span')
-  accessBadge.className = `access-badge ${person.access === 'public' ? 'is-public' : 'is-private'}`
-  accessBadge.textContent = person.access === 'public' ? t('common.public') : t('common.private')
-  card.appendChild(accessBadge)
-
-  card.addEventListener('click', (event) => {
-    if (event.target.closest('.icon-btn')) return
-    if (Date.now() < suppressNodeClickUntil.value) return
-    handleSelectNode(nodeId)
-  })
-
-  const childrenWrap = document.createElement('div')
-  childrenWrap.className = 'tree-children'
-
-  childIds.forEach((childId) => {
-    const childRow = createNodeRow(childId, false, nextPath)
-    if (childRow) {
-      childrenWrap.appendChild(childRow)
-    }
-  })
-
-  row.appendChild(card)
-  row.appendChild(childrenWrap)
-
-  return row
-}
-
-function renderMindMap() {
-  if (!mountRef.value) return
-
-  mountRef.value.innerHTML = ''
-
-  rootIds.value.forEach((rootId) => {
-    const row = createNodeRow(rootId, true, new Set())
-    if (row) {
-      mountRef.value.appendChild(row)
-    }
-  })
-
-  updateStageBounds()
-  syncSelectedNodeClass()
-  scheduleDrawLines()
-  flushPendingFocus()
-}
-
-function drawLines() {
-  if (!linesRef.value || !stageRef.value || !mountRef.value) return
-
-  linesRef.value.innerHTML = ''
-
-  const stageRect = stageRef.value.getBoundingClientRect()
-  const lineColor =
-    getComputedStyle(stageRef.value).getPropertyValue('--line-color').trim() || 'rgba(148, 163, 184, 0.4)'
-
-  const rows = mountRef.value.querySelectorAll('.tree-row')
-
-  rows.forEach((row) => {
-    if (row.classList.contains('collapsed')) return
-
-    const parentCard = row.querySelector(':scope > .tree-node')
-    const childrenCol = row.querySelector(':scope > .tree-children')
-    if (!parentCard || !childrenCol) return
-
-    const childRows = childrenCol.querySelectorAll(':scope > .tree-row')
-    if (!childRows.length) return
-
-    const parentRect = parentCard.getBoundingClientRect()
-    const parentX = parentRect.right - stageRect.left
-    const parentY = (parentRect.top + parentRect.bottom) / 2 - stageRect.top
-
-    childRows.forEach((childRow) => {
-      const childCard = childRow.querySelector(':scope > .tree-node')
-      if (!childCard) return
-
-      const childRect = childCard.getBoundingClientRect()
-      const childX = childRect.left - stageRect.left
-      const childY = (childRect.top + childRect.bottom) / 2 - stageRect.top
-      const midX = (parentX + childX) / 2
-
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-      path.setAttribute('d', `M ${parentX} ${parentY} C ${midX} ${parentY}, ${midX} ${childY}, ${childX} ${childY}`)
-      path.setAttribute('fill', 'none')
-      path.setAttribute('stroke', lineColor)
-      path.setAttribute('stroke-width', '2')
-      path.setAttribute('stroke-linecap', 'round')
-      linesRef.value.appendChild(path)
-
-      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-      dot.setAttribute('cx', childX)
-      dot.setAttribute('cy', childY)
-      dot.setAttribute('r', '3')
-      dot.setAttribute('fill', 'rgba(14, 165, 233, 0.56)')
-      linesRef.value.appendChild(dot)
-    })
-  })
-}
-
-function requestNodeFocus(nodeId, behavior = 'smooth', axis = 'both') {
-  if (nodeId == null) return
-  pendingFocusRequest.value = { nodeId, behavior, axis }
-}
-
-function focusNode(nodeId, behavior = 'smooth', axis = 'both') {
-  if (!viewportRef.value || !mountRef.value || nodeId == null) return
-
-  const card = mountRef.value.querySelector(`.tree-node[data-node-id="${nodeId}"]`)
-  if (!card) return
-
-  const viewport = viewportRef.value
-  const cardRect = card.getBoundingClientRect()
-  const viewportRect = viewport.getBoundingClientRect()
-  const deltaLeft = cardRect.left - viewportRect.left + cardRect.width / 2 - viewportRect.width / 2
-  const deltaTop = cardRect.top - viewportRect.top + cardRect.height / 2 - viewportRect.height / 2
-
-  const maxLeft = Math.max(0, viewport.scrollWidth - viewport.clientWidth)
-  const maxTop = Math.max(0, viewport.scrollHeight - viewport.clientHeight)
-  const targetLeft = Math.min(maxLeft, Math.max(0, viewport.scrollLeft + deltaLeft))
-  const targetTop = Math.min(maxTop, Math.max(0, viewport.scrollTop + deltaTop))
-
-  viewport.scrollTo({
-    left: axis === 'both' || axis === 'x' ? targetLeft : viewport.scrollLeft,
-    top: axis === 'both' || axis === 'y' ? targetTop : viewport.scrollTop,
-    behavior,
-  })
-}
-
-function flushPendingFocus() {
-  if (!pendingFocusRequest.value) return
-  const { nodeId, behavior, axis } = pendingFocusRequest.value
-  pendingFocusRequest.value = null
-
-  requestAnimationFrame(() => {
-    focusNode(nodeId, behavior, axis)
-  })
+  gestures.panX.value = targetPanX
+  gestures.panY.value = targetPanY
 }
 
 function centerTree(behavior = 'smooth') {
@@ -988,230 +241,149 @@ function centerTree(behavior = 'smooth') {
     selectedNodeId.value != null && personById.value.has(selectedNodeId.value)
       ? selectedNodeId.value
       : rootIds.value[0]
-
-  if (targetId == null) return
-  focusNode(targetId, behavior, 'both')
+  if (targetId != null) focusNode(targetId, behavior)
 }
 
-function handleViewportScroll() {
-  scheduleDrawLines()
+// ─── Toggle collapse ──────────────────────────────────────────────────────────
+function toggleNode(nodeId) {
+  const next = new Set(collapsedNodeIds.value)
+  next.has(nodeId) ? next.delete(nodeId) : next.add(nodeId)
+  collapsedNodeIds.value = next   // layout recomputes automatically
+}
+
+// ─── Node selection ───────────────────────────────────────────────────────────
+function handleSelectNode(nodeId) {
+  selectedNodeId.value = nodeId
+  emit('node-click', nodeId)
+  focusNode(nodeId, 'smooth')
+}
+
+// ─── Expand ancestors + focus (used by search) ────────────────────────────────
+async function expandToNode(nodeId) {
+  // Un-collapse all ancestors so the node becomes visible
+  const ancestors = buildAncestorIds(nodeId, personById.value)
+  if (ancestors.size > 0) {
+    const next = new Set(collapsedNodeIds.value)
+    ancestors.forEach((id) => next.delete(id))
+    collapsedNodeIds.value = next
+  }
+  await nextTick()
+  selectedNodeId.value = nodeId
+  emit('node-click', nodeId)
+  focusNode(nodeId, 'smooth')
+}
+
+// ─── syncCollapsedState ───────────────────────────────────────────────────────
+function syncCollapsedState() {
+  const { nextCollapsed, nextKnown } = computeNextCollapsedState(
+    props.persons,
+    childrenByParentId.value,
+    rootIds.value,
+    collapsedNodeIds.value,
+    knownNodeIds.value,
+  )
+  collapsedNodeIds.value = nextCollapsed
+  knownNodeIds.value     = nextKnown
+}
+
+// ─── Fullscreen ───────────────────────────────────────────────────────────────
+function syncFullscreenState() {
+  isFullscreen.value = Boolean(document.fullscreenElement && document.fullscreenElement === treeViewRef.value)
+}
+
+async function toggleFullscreen() {
+  if (!treeViewRef.value) return
+  try {
+    if (document.fullscreenElement === treeViewRef.value) await document.exitFullscreen()
+    else await treeViewRef.value.requestFullscreen()
+  } catch { /* ignore browser-level fullscreen errors */ }
+}
+
+function handleFullscreenChange() {
+  syncFullscreenState()
+  nextTick(() => {
+    const targetId =
+      selectedNodeId.value != null && personById.value.has(selectedNodeId.value)
+        ? selectedNodeId.value : rootIds.value[0]
+    if (targetId != null) focusNode(targetId, 'auto')
+  })
 }
 
 function handleWindowResize() {
   windowWidth.value = window.innerWidth
-  updateStageBounds()
-  scheduleDrawLines()
 }
 
-function handleViewportWheel(event) {
-  if (!viewportRef.value || props.persons.length === 0) return
-
-  event.preventDefault()
-
-  const delta = event.deltaY !== 0 ? event.deltaY : event.deltaX
-  if (delta === 0) return
-
-  const nextScale = clampZoomScale(zoomScale.value + (delta < 0 ? ZOOM_STEP : -ZOOM_STEP))
-  if (nextScale === zoomScale.value) return
-
-  const viewport = viewportRef.value
-  const viewportRect = viewport.getBoundingClientRect()
-  const mouseX = event.clientX - viewportRect.left
-  const mouseY = event.clientY - viewportRect.top
-  const stageX = viewport.scrollLeft + mouseX
-  const stageY = viewport.scrollTop + mouseY
-  const ratio = nextScale / zoomScale.value
-
-  zoomScale.value = nextScale
-
-  nextTick(() => {
-    updateStageBounds()
-    viewport.scrollLeft = Math.max(0, stageX * ratio - mouseX)
-    viewport.scrollTop = Math.max(0, stageY * ratio - mouseY)
-    scheduleDrawLines()
-  })
-}
-
-function handleViewportMouseDown(event) {
-  startViewportDrag(event)
-}
-
-function handleWindowMouseMove(event) {
-  moveViewportDrag(event)
-}
-
-function handleWindowMouseUp() {
-  stopViewportDrag()
-}
-
-function handleViewportTouchStart(event) {
-  if (!viewportRef.value || props.persons.length === 0) return
-  const targetElement = event.target instanceof Element ? event.target : null
-  if (targetElement?.closest('.icon-btn')) return
-
-  if (event.touches.length === 1) {
-    startTouchPan(event.touches[0])
-    return
-  }
-
-  if (event.touches.length >= 2) {
-    startTouchPinch(event.touches[0], event.touches[1])
-    event.preventDefault()
-  }
-}
-
-function handleViewportTouchMove(event) {
-  if (!viewportRef.value || props.persons.length === 0) return
-
-  if (event.touches.length >= 2) {
-    if (touchGestureState.mode !== 'pinch') {
-      startTouchPinch(event.touches[0], event.touches[1])
-    }
-    moveTouchPinch(event.touches[0], event.touches[1])
-    event.preventDefault()
-    return
-  }
-
-  if (event.touches.length === 1) {
-    if (touchGestureState.mode !== 'pan') {
-      startTouchPan(event.touches[0])
-    }
-    const didMove = moveTouchPan(event.touches[0])
-    if (didMove) {
-      event.preventDefault()
-    }
-  }
-}
-
-function handleViewportTouchEnd(event) {
-  if (!viewportRef.value) return
-
-  if (event.touches.length >= 2) {
-    startTouchPinch(event.touches[0], event.touches[1])
-    return
-  }
-
-  if (event.touches.length === 1) {
-    startTouchPan(event.touches[0])
-    return
-  }
-
-  stopTouchGesture()
-}
-
+// ─── Watchers ─────────────────────────────────────────────────────────────────
 watch(
   () => props.persons,
-  async () => {
+  () => {
     syncCollapsedState()
-
     if (selectedNodeId.value != null && !personById.value.has(selectedNodeId.value)) {
       selectedNodeId.value = null
     }
+    modal.closeIfStaleNode(personById.value)
+  },
+  { deep: true },
+)
 
-    if (activeNodeId.value != null && !personById.value.has(activeNodeId.value)) {
-      closeModal(true)
-    }
-
-    await nextTick()
-    renderMindMap()
-
-    if (props.persons.length === 0) {
-      autoCentered.value = false
-      return
-    }
-
-    if (!autoCentered.value) {
-      await nextTick()
-      centerTree('auto')
-      autoCentered.value = true
+// Auto-center once on first layout
+watch(
+  layoutNodes,
+  (nodes) => {
+    if (!autoCentered.value && nodes.length > 0) {
+      nextTick(() => { centerTree('auto'); autoCentered.value = true })
     }
   },
-  { immediate: true, deep: true }
+  { immediate: true },
 )
 
-watch(canManage, () => {
-  renderMindMap()
-})
-
-watch(canSeeNodeMeta, () => {
-  renderMindMap()
-})
-
-watch(
-  () => locale.value,
-  () => {
-    renderMindMap()
-  }
-)
-
+// ─── Lifecycle ────────────────────────────────────────────────────────────────
 onMounted(() => {
   windowWidth.value = window.innerWidth
-  if (windowWidth.value <= 640) {
-    zoomScale.value = MOBILE_ZOOM_SCALE
-  } else if (windowWidth.value <= 980) {
-    zoomScale.value = TABLET_ZOOM_SCALE
-  }
+  if (windowWidth.value <= 640)      gestures.zoomScale.value = MOBILE_ZOOM_SCALE
+  else if (windowWidth.value <= 980) gestures.zoomScale.value = TABLET_ZOOM_SCALE
 
   if (viewportRef.value) {
-    viewportRef.value.addEventListener('scroll', handleViewportScroll, { passive: true })
-    viewportRef.value.addEventListener('wheel', handleViewportWheel, { passive: false })
-    viewportRef.value.addEventListener('mousedown', handleViewportMouseDown)
-    viewportRef.value.addEventListener('touchstart', handleViewportTouchStart, { passive: false })
-    viewportRef.value.addEventListener('touchmove', handleViewportTouchMove, { passive: false })
-    viewportRef.value.addEventListener('touchend', handleViewportTouchEnd, { passive: false })
-    viewportRef.value.addEventListener('touchcancel', handleViewportTouchEnd, { passive: false })
+    const vp = viewportRef.value
+    vp.addEventListener('wheel',       gestures.handleViewportWheel,     { passive: false })
+    vp.addEventListener('mousedown',   gestures.handleViewportMouseDown)
+    vp.addEventListener('touchstart',  gestures.handleViewportTouchStart, { passive: false })
+    vp.addEventListener('touchmove',   gestures.handleViewportTouchMove,  { passive: false })
+    vp.addEventListener('touchend',    gestures.handleViewportTouchEnd,   { passive: false })
+    vp.addEventListener('touchcancel', gestures.handleViewportTouchEnd,   { passive: false })
   }
 
-  window.addEventListener('resize', handleWindowResize)
-  window.addEventListener('mousemove', handleWindowMouseMove)
-  window.addEventListener('mouseup', handleWindowMouseUp)
-  window.addEventListener('blur', handleWindowMouseUp)
+  window.addEventListener('resize',    handleWindowResize)
+  window.addEventListener('mousemove', gestures.handleWindowMouseMove)
+  window.addEventListener('mouseup',   gestures.handleWindowMouseUp)
+  window.addEventListener('blur',      gestures.handleWindowMouseUp)
   document.addEventListener('fullscreenchange', handleFullscreenChange)
 
-  if (typeof ResizeObserver !== 'undefined' && stageRef.value) {
-    resizeObserver = new ResizeObserver(() => {
-      scheduleDrawLines()
-    })
-
-    resizeObserver.observe(stageRef.value)
-    if (mountRef.value) {
-      resizeObserver.observe(mountRef.value)
-    }
-  }
-
-  renderMindMap()
   syncFullscreenState()
 })
 
 onUnmounted(() => {
   if (viewportRef.value) {
-    viewportRef.value.removeEventListener('scroll', handleViewportScroll)
-    viewportRef.value.removeEventListener('wheel', handleViewportWheel)
-    viewportRef.value.removeEventListener('mousedown', handleViewportMouseDown)
-    viewportRef.value.removeEventListener('touchstart', handleViewportTouchStart)
-    viewportRef.value.removeEventListener('touchmove', handleViewportTouchMove)
-    viewportRef.value.removeEventListener('touchend', handleViewportTouchEnd)
-    viewportRef.value.removeEventListener('touchcancel', handleViewportTouchEnd)
+    const vp = viewportRef.value
+    vp.removeEventListener('wheel',       gestures.handleViewportWheel)
+    vp.removeEventListener('mousedown',   gestures.handleViewportMouseDown)
+    vp.removeEventListener('touchstart',  gestures.handleViewportTouchStart)
+    vp.removeEventListener('touchmove',   gestures.handleViewportTouchMove)
+    vp.removeEventListener('touchend',    gestures.handleViewportTouchEnd)
+    vp.removeEventListener('touchcancel', gestures.handleViewportTouchEnd)
   }
-
-  window.removeEventListener('resize', handleWindowResize)
-  window.removeEventListener('mousemove', handleWindowMouseMove)
-  window.removeEventListener('mouseup', handleWindowMouseUp)
-  window.removeEventListener('blur', handleWindowMouseUp)
+  window.removeEventListener('resize',    handleWindowResize)
+  window.removeEventListener('mousemove', gestures.handleWindowMouseMove)
+  window.removeEventListener('mouseup',   gestures.handleWindowMouseUp)
+  window.removeEventListener('blur',      gestures.handleWindowMouseUp)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  stopViewportDrag()
-  stopTouchGesture()
-
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-    resizeObserver = null
-  }
-
-  if (lineFrameId != null) {
-    cancelAnimationFrame(lineFrameId)
-    lineFrameId = null
-  }
+  gestures.stopViewportDrag()
+  gestures.stopTouchGesture()
+  clearTimeout(panTransitionTimeout)
 })
+
+// ─── Public API (called from TreePage / search) ────────────────────────────────
+defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 </script>
 
 <style>
@@ -1333,10 +505,9 @@ onUnmounted(() => {
 .tree-viewport {
   position: relative;
   height: 560px;
-  overflow: auto;
+  overflow: hidden;
   cursor: grab;
   touch-action: none;
-  -webkit-overflow-scrolling: auto;
   border-radius: 16px;
   border: 1px solid var(--border);
   background:
@@ -1354,11 +525,12 @@ onUnmounted(() => {
   cursor: grabbing !important;
 }
 
-.tree-stage {
-  position: relative;
-  width: 1600px;
-  min-height: 900px;
-  padding: 26px;
+.tree-scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
 }
 
 .tree-lines {
@@ -1367,47 +539,47 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  overflow: visible;
 }
 
-.tree-mount {
+.tree-edge {
+  fill: none;
+  stroke: var(--line-color);
+  stroke-width: 2;
+}
+
+.tree-nodes {
   position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-y);
-  width: max-content;
-  transform-origin: top left;
-  will-change: transform;
+  inset: 0;
+  overflow: visible;
 }
 
-.tree-row {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-x);
+/* ── Node enter/leave transitions (TransitionGroup name="node") ─────────────── */
+.node-enter-active,
+.node-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
 }
 
-.tree-row.collapsed > .tree-children {
-  max-height: 0;
+.node-enter-from {
   opacity: 0;
-  transform: translateY(-8px);
-  pointer-events: none;
+  transform: scale(0.88) translateY(6px);
 }
 
-.tree-children {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-y);
-  padding-top: 2px;
-  overflow: hidden;
-  max-height: 20000px;
-  opacity: 1;
-  transform: translateY(0);
-  transition:
-    max-height 0.34s cubic-bezier(0.25, 0.8, 0.25, 1),
-    opacity 0.22s ease,
-    transform 0.22s ease;
-  will-change: max-height, opacity, transform;
+.node-leave-to {
+  opacity: 0;
+  transform: scale(0.88) translateY(6px);
+}
+
+/* ── Selected node pulse ──────────────────────────────────────────────────── */
+@keyframes node-pulse {
+  0%, 100% { outline-color: rgba(56, 189, 248, 0.45); }
+  50%       { outline-color: rgba(56, 189, 248, 0.85); }
+}
+
+.selected-node {
+  outline: 2px solid rgba(56, 189, 248, 0.45);
+  outline-offset: 2px;
+  animation: node-pulse 2s ease infinite;
 }
 
 .tree-node {
@@ -1433,11 +605,6 @@ onUnmounted(() => {
 
 .root-node {
   border-color: rgba(129, 140, 248, 0.45);
-}
-
-.selected-node {
-  outline: 2px solid rgba(56, 189, 248, 0.45);
-  outline-offset: 2px;
 }
 
 .node-top {
@@ -1618,17 +785,6 @@ onUnmounted(() => {
   margin-top: 10px;
 }
 
-.tree-viewport::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-.tree-viewport::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.42);
-  border-radius: 999px;
-  border: 3px solid rgba(241, 245, 249, 0.78);
-}
-
 @media (max-width: 1080px) {
   .tree-view {
     --gap-x: 28px;
@@ -1639,10 +795,6 @@ onUnmounted(() => {
 
   .tree-viewport {
     height: 520px;
-  }
-
-  .tree-stage {
-    padding: 20px;
   }
 }
 
@@ -1681,10 +833,6 @@ onUnmounted(() => {
     border-radius: 14px;
   }
 
-  .tree-stage {
-    padding: 16px;
-  }
-
   .tree-node {
     border-radius: 14px;
     padding: 10px 10px 8px;
@@ -1716,10 +864,6 @@ onUnmounted(() => {
 
   .tree-viewport {
     height: 400px;
-  }
-
-  .tree-stage {
-    padding: 12px;
   }
 
   .node-label {
@@ -1762,10 +906,6 @@ onUnmounted(() => {
 @media (max-width: 420px) {
   .tree-viewport {
     height: 340px;
-  }
-
-  .tree-stage {
-    padding: 10px;
   }
 
   .header-controls .control-btn {

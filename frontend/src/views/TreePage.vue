@@ -43,7 +43,7 @@
     </div>
 
     <div class="tree-graph fade-up" v-if="treeStore.persons.length > 0">
-      <TreeView :persons="treeStore.persons" @node-click="onNodeClick" />
+      <TreeView ref="treeViewRef" :persons="treeStore.persons" @node-click="onNodeClick" />
     </div>
 
     <div v-if="!treeStore.loading && treeStore.persons.length === 0" class="empty-state card fade-up">
@@ -74,15 +74,19 @@ const router = useRouter()
 const selectedPerson = ref(null)
 const pathFrom = ref(null)
 const pathTo = ref(null)
+const treeViewRef = ref(null)
 const { t } = useI18n()
 
 onMounted(async () => {
   await treeStore.fetchFullTree()
 
   if (route.params.id) {
-    const person = await treeStore.fetchPerson(parseInt(route.params.id))
+    const id = parseInt(route.params.id)
+    const person = await treeStore.fetchPerson(id)
     if (person) {
       selectedPerson.value = person
+      // Expand and focus the node once the tree is ready
+      treeViewRef.value?.expandToNode(id)
     }
   }
 })
@@ -96,6 +100,8 @@ async function onNodeClick(nodeId) {
 
 function onSearchSelect(person) {
   selectedPerson.value = person
+  // Pan / expand to node instead of navigating away
+  treeViewRef.value?.expandToNode(person.id)
   router.push(`/tree/${person.id}`)
 }
 
