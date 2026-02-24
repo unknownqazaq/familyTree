@@ -30,15 +30,19 @@
           <TreeNode
             v-for="node in layoutNodes"
             :key="node.id"
+            :ref="(el) => registerNodeEl(node.id, el)"
             :style="{
               position: 'absolute',
               left: node.x + 'px',
               top: node.y + 'px',
-              width: NODE_W + 'px',
-              maxWidth: NODE_W + 'px',
-              minWidth: NODE_W + 'px',
+              width: (node.w || NODE_W) + 'px',
+              maxWidth: (node.w || NODE_W) + 'px',
+              minWidth: (node.w || NODE_W) + 'px',
               overflow: 'hidden',
               boxSizing: 'border-box',
+              transition: layoutSettled
+                ? 'left 280ms cubic-bezier(0.2, 0, 0, 1), top 280ms cubic-bezier(0.2, 0, 0, 1)'
+                : 'none',
             }"
             :person="node.person"
             :isSelected="node.id === selectedNodeId"
@@ -178,7 +182,7 @@ const panTransitioning = ref(false)
 let   panTransitionTimeout = null
 
 // ─── Node size tracking (ResizeObserver → layout engine) ─────────────────────
-// Maps node id (string) → measured outer height (px)
+// Maps node id (string) → measured outer size { width, height }
 const nodeSizeMap = ref(new Map())
 const nodeElMap   = new Map()   // id → DOM Element (plain, non-reactive)
 let   nodeRO      = null        // single shared ResizeObserver
@@ -187,8 +191,12 @@ let   roRafId     = null        // rAF handle for debounced batch update
 function _flushNodeSizes(pending) {
   const next = new Map(nodeSizeMap.value)
   let changed = false
-  for (const [id, h] of pending) {
-    if (next.get(id) !== h) { next.set(id, h); changed = true }
+  for (const [id, size] of pending) {
+    const prev = next.get(id)
+    if (!prev || prev.width !== size.width || prev.height !== size.height) {
+      next.set(id, size)
+      changed = true
+    }
   }
   if (changed) nodeSizeMap.value = next
 }
@@ -203,6 +211,11 @@ function registerNodeEl(id, el) {
       if (prev) nodeRO?.unobserve(prev)
       nodeElMap.set(id, dom)
       nodeRO?.observe(dom)
+      const rect = dom.getBoundingClientRect()
+      _flushNodeSizes(new Map([[String(id), {
+        width: Math.max(Math.round(rect.width), NODE_W),
+        height: Math.max(Math.round(rect.height), NODE_H),
+      }]]))
     }
   } else {
     const prev = nodeElMap.get(id)
@@ -269,7 +282,7 @@ function focusNode(nodeId, behavior = 'smooth') {
   if (!node || !viewportRef.value) return
   const vp         = viewportRef.value
   const targetPanX = vp.clientWidth  / 2 - (node.x + NODE_W / 2) * gestures.zoomScale.value
-  const targetPanY = vp.clientHeight / 2 - (node.y + NODE_H / 2) * gestures.zoomScale.value
+  const targetPanY = vp.clientHeight / 2 - (node.y + (node.h || NODE_H) / 2) * gestures.zoomScale.value
 
   if (behavior === 'smooth') {
     panTransitioning.value = true
@@ -399,11 +412,11 @@ onMounted(() => {
     for (const entry of entries) {
       for (const [id, dom] of nodeElMap) {
         if (dom !== entry.target) continue
-        // Prefer border-box size (includes padding + border); fallback adds 22px
-        const h = entry.borderBoxSize?.length
-          ? Math.round(entry.borderBoxSize[0].blockSize)
-          : Math.round(entry.contentRect.height + 22)
-        pending.set(id, Math.max(h, NODE_H))
+        const rect = dom.getBoundingClientRect()
+        pending.set(String(id), {
+          width: Math.max(Math.round(rect.width), NODE_W),
+          height: Math.max(Math.round(rect.height), NODE_H),
+        })
         break
       }
     }

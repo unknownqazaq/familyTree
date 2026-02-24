@@ -1,17 +1,3 @@
-/**
- * useTreeLayout
- *
- * Pure-computed layout engine built on top of d3-hierarchy.
- * Replaces the CSS-flexbox approach with absolute positions so nodes
- * never overlap and parents are centered over their children.
- *
- * Layout orientation: LEFT-TO-RIGHT (depth grows on the X axis, siblings
- * are spread on the Y axis).
- *
- * All raw d3 coordinates are normalized so the top-left node starts at
- * (SCENE_PAD, SCENE_PAD) – no negative positions.
- */
-import { hierarchy, tree } from 'd3-hierarchy'
 import { computed } from 'vue'
 import {
   buildChildrenByParentId,
@@ -20,29 +6,25 @@ import {
   buildRootIds,
 } from '../utils/treeUtils.js'
 
-// ─── Layout constants (exported so TreeView / TreeNode can read them) ─────────
-export const NODE_W    = 220   // card width  (px)
-export const NODE_H    = 90    // card height baseline (px) — actual may be larger
-export const GAP_X     = 80    // horizontal gap between depth levels
-export const GAP_Y     = 32    // vertical   gap between siblings (min clearance)
-export const SCENE_PAD = 80    // padding around the whole scene
+export const NODE_W = 220
+export const NODE_H = 90
+export const GAP_X = 96
+export const GAP_Y = 28
+export const SCENE_PAD = 80
 
-// ─── Composable ───────────────────────────────────────────────────────────────
-
-/**
- * @param {import('vue').Ref<Array>}              personsRef
- * @param {import('vue').Ref<Set>}                collapsedNodeIdsRef
- * @param {import('vue').Ref<Map<string,number>>} [nodeSizesRef]  id → measured height
- */
 export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = null) {
-  const personById         = computed(() => buildPersonById(personsRef.value))
+  const personById = computed(() => buildPersonById(personsRef.value))
   const childrenByParentId = computed(() => buildChildrenByParentId(personsRef.value))
-  const rootIds            = computed(() => buildRootIds(personsRef.value, personById.value))
+  const rootIds = computed(() => buildRootIds(personsRef.value, personById.value))
 
-  /** Returns the measured height for a node id, falling back to NODE_H. */
-  const nodeH = (id) => nodeSizesRef?.value?.get(String(id)) ?? NODE_H
+  const measuredSize = (id) => {
+    const raw = nodeSizesRef?.value?.get(String(id))
+    return {
+      w: Math.max(Math.round(raw?.width ?? NODE_W), NODE_W),
+      h: Math.max(Math.round(raw?.height ?? NODE_H), NODE_H),
+    }
+  }
 
-  // ── Core layout computation ─────────────────────────────────────────────────
   const layoutResult = computed(() => {
     if (personsRef.value.length === 0) return { nodes: [], edges: [] }
 
@@ -53,83 +35,104 @@ export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = nu
       collapsedNodeIdsRef.value,
     )
 
-    // ── Compute the maximum measured node height visible in the current tree ──
-    // We use this as the uniform slot height for d3 so every sibling row has
-    // enough vertical clearance for the tallest card.
-    let maxH = NODE_H
-    if (nodeSizesRef?.value?.size) {
-      for (const h of nodeSizesRef.value.values()) {
-        if (h > maxH) maxH = h
+    const nodesById = new Map()
+    const edges = []
+    const maxWidthByDepth = new Map()
+
+    const collect = (node, depth, parentId = null) => {
+      if (!node || node.id === 'VIRTUAL_ROOT') {
+        for (const child of node?.children || []) collect(child, 0, null)
+        return
+      }
+
+      const { w, h } = measuredSize(node.id)
+      nodesById.set(node.id, {
+        id: node.id,
+        depth,
+        parentId,
+        person: node.person,
+        hasChildren: (childrenByParentId.value.get(node.id) || []).length > 0,
+        isCollapsed: collapsedNodeIdsRef.value.has(node.id),
+        w,
+        h,
+        x: 0,
+        y: 0,
+      })
+
+      const prevMaxW = maxWidthByDepth.get(depth) ?? NODE_W
+      if (w > prevMaxW) maxWidthByDepth.set(depth, w)
+      else if (!maxWidthByDepth.has(depth)) maxWidthByDepth.set(depth, prevMaxW)
+
+      for (const child of node.children || []) {
+        edges.push({ parentId: node.id, childId: child.id })
+        collect(child, depth + 1, node.id)
       }
     }
-    const slotH = maxH + GAP_Y   // d3 dx  → screen-Y spacing
 
-    // Build hierarchy and run the d3 tree layout.
-    // nodeSize([dx, dy]):
-    //   dx = spacing between siblings on d3's x-axis  → becomes screen Y
-    //   dy = spacing between depth levels on d3's y-axis → becomes screen X
-    const root       = hierarchy(input, (d) => d.children)
-    const treeLayout = tree().nodeSize([slotH, NODE_W + GAP_X])
-    treeLayout(root)
+    collect(input, 0, null)
 
-    // Find the bounding box of all real nodes (excluding VIRTUAL_ROOT)
-    let rawMinX = Infinity
-    let rawMinY = Infinity
-    root.each((node) => {
-      if (node.data.id === 'VIRTUAL_ROOT') return
-      // Swap: d3.y → screenX, d3.x → screenY
-      if (node.y < rawMinX) rawMinX = node.y
-      if (node.x < rawMinY) rawMinY = node.x
-    })
+    const depthX = new Map()
+    const sortedDepths = [...maxWidthByDepth.keys()].sort((a, b) => a - b)
+    let cursorX = SCENE_PAD
+    for (const depth of sortedDepths) {
+      depthX.set(depth, cursorX)
+      cursorX += (maxWidthByDepth.get(depth) || NODE_W) + GAP_X
+    }
 
-    const offsetX = -rawMinX + SCENE_PAD
-    const offsetY = -rawMinY + SCENE_PAD
+    const cursorByDepth = new Map()
+    const roots = (input.children || []).map((n) => n.id)
 
-    // Build a fast map from d3 data id → normalized screen {x, y}
-    const posMap = new Map()
-    root.each((node) => {
-      if (node.data.id === 'VIRTUAL_ROOT') return
-      posMap.set(node.data.id, {
-        x: node.y + offsetX,
-        y: node.x + offsetY,
-      })
-    })
+    const placeSubtree = (nodeId) => {
+      const node = nodesById.get(nodeId)
+      if (!node) return { center: SCENE_PAD, top: SCENE_PAD, bottom: SCENE_PAD }
 
-    const nodes = []
-    const edges = []
+      const childIds = edges.filter((e) => e.parentId === nodeId).map((e) => e.childId)
+      const childBoxes = childIds.map((id) => placeSubtree(id))
 
-    root.each((node) => {
-      if (node.data.id === 'VIRTUAL_ROOT') return
-
-      const pos = posMap.get(node.data.id)
-      const h   = nodeH(node.data.id)
-
-      nodes.push({
-        id:          node.data.id,
-        x:           pos.x,
-        y:           pos.y,
-        depth:       node.depth - 1, // subtract 1 because VIRTUAL_ROOT is depth 0
-        person:      node.data.person,
-        hasChildren: (childrenByParentId.value.get(node.data.id) || []).length > 0,
-        isCollapsed: collapsedNodeIdsRef.value.has(node.data.id),
-        h,
-      })
-
-      // Draw an edge from this node to its parent (skip VIRTUAL_ROOT → real-root edges)
-      if (node.parent && node.parent.data.id !== 'VIRTUAL_ROOT') {
-        const pPos = posMap.get(node.parent.data.id)
-        const pH   = nodeH(node.parent.data.id)
-        edges.push({
-          id: `${node.parent.data.id}-${node.data.id}`,
-          x1: pPos.x + NODE_W,      // parent right-center
-          y1: pPos.y + pH  / 2,     // use actual parent height for midpoint
-          x2: pos.x,                // child left-center
-          y2: pos.y + h   / 2,      // use actual child  height for midpoint
-        })
+      let desiredY
+      if (childBoxes.length === 0) {
+        desiredY = cursorByDepth.get(node.depth) ?? SCENE_PAD
+      } else {
+        const childrenCenter = childBoxes.reduce((sum, box) => sum + box.center, 0) / childBoxes.length
+        desiredY = childrenCenter - node.h / 2
       }
-    })
 
-    return { nodes, edges }
+      const minY = cursorByDepth.get(node.depth) ?? SCENE_PAD
+      node.y = Math.max(minY, desiredY)
+      node.x = depthX.get(node.depth) ?? SCENE_PAD
+      cursorByDepth.set(node.depth, node.y + node.h + GAP_Y)
+
+      const top = Math.min(node.y, ...childBoxes.map((b) => b.top))
+      const bottom = Math.max(node.y + node.h, ...childBoxes.map((b) => b.bottom))
+      return { center: node.y + node.h / 2, top, bottom }
+    }
+
+    for (const rootId of roots) placeSubtree(rootId)
+
+    const nodes = [...nodesById.values()]
+    const normalizedMinY = nodes.length > 0 ? Math.min(...nodes.map((n) => n.y)) : SCENE_PAD
+    const yOffset = normalizedMinY < SCENE_PAD ? (SCENE_PAD - normalizedMinY) : 0
+    if (yOffset) {
+      nodes.forEach((n) => { n.y += yOffset })
+    }
+
+    const posById = new Map(nodes.map((n) => [n.id, n]))
+    const layoutEdges = edges
+      .map((edge) => {
+        const parent = posById.get(edge.parentId)
+        const child = posById.get(edge.childId)
+        if (!parent || !child) return null
+        return {
+          id: `${edge.parentId}-${edge.childId}`,
+          x1: parent.x + parent.w,
+          y1: parent.y + parent.h / 2,
+          x2: child.x,
+          y2: child.y + child.h / 2,
+        }
+      })
+      .filter(Boolean)
+
+    return { nodes, edges: layoutEdges }
   })
 
   const layoutNodes = computed(() => layoutResult.value.nodes)
@@ -142,13 +145,13 @@ export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = nu
     let maxX = 0
     let maxY = 0
     for (const n of nds) {
-      const h = nodeH(n.id)
-      if (n.x + NODE_W > maxX) maxX = n.x + NODE_W
-      if (n.y + h      > maxY) maxY = n.y + h
+      if (n.x + n.w > maxX) maxX = n.x + n.w
+      if (n.y + n.h > maxY) maxY = n.y + n.h
     }
+
     return {
-      width:  Math.max(1600, maxX + SCENE_PAD),
-      height: Math.max(900,  maxY + SCENE_PAD),
+      width: Math.max(1600, maxX + SCENE_PAD),
+      height: Math.max(900, maxY + SCENE_PAD),
     }
   })
 
@@ -156,7 +159,6 @@ export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = nu
     layoutNodes,
     layoutEdges,
     sceneBounds,
-    // Re-export for convenience (TreeView needs them for modal, focus, etc.)
     personById,
     childrenByParentId,
     rootIds,
