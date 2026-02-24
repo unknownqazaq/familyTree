@@ -11,7 +11,7 @@
     <div class="node-top">
       <div class="label-line">
         <span class="node-dot"></span>
-        <span class="node-label">{{ person.name }}</span>
+        <span class="node-label" :title="person.name">{{ person.name }}</span>
       </div>
 
       <div class="node-actions">
@@ -42,12 +42,32 @@
       </div>
     </div>
 
-    <div v-if="person.designation" class="node-designation">{{ person.designation }}</div>
+    <div
+      v-if="person.designation"
+      class="node-designation"
+      :class="{ 'is-clamped': longDesig && !expandedDesig }"
+      :title="person.designation"
+    >{{ person.designation }}</div>
+    <button
+      v-if="longDesig"
+      class="node-expand-btn"
+      @click.stop="expandedDesig = !expandedDesig"
+    >{{ expandedDesig ? t('common.showLess') : t('common.showMore') }}</button>
 
     <div v-if="canSeeNodeMeta" class="node-meta">
       <span>#{{ person.id }}</span>
-      <span v-if="person.reference"> · {{ person.reference }}</span>
+      <div
+        v-if="person.reference"
+        class="meta-reference"
+        :class="{ 'is-clamped': longMeta && !expandedMeta }"
+        :title="person.reference"
+      >{{ person.reference }}</div>
     </div>
+    <button
+      v-if="canSeeNodeMeta && longMeta"
+      class="node-expand-btn"
+      @click.stop="expandedMeta = !expandedMeta"
+    >{{ expandedMeta ? t('common.showLess') : t('common.showMore') }}</button>
 
     <span
       v-if="person.access"
@@ -60,6 +80,7 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps({
@@ -77,8 +98,54 @@ const emit = defineEmits(['click', 'toggle', 'add', 'edit', 'delete'])
 
 const { t } = useI18n()
 
+const CLAMP_THRESHOLD = 80
+
+const expandedDesig = ref(false)
+const expandedMeta  = ref(false)
+
+const longDesig = computed(() => (props.person?.designation?.length ?? 0) > CLAMP_THRESHOLD)
+const longMeta  = computed(() => (props.person?.reference?.length ?? 0) > CLAMP_THRESHOLD)
+
 function handleClick() {
   if (Date.now() < props.suppressClickUntil) return
   emit('click')
 }
 </script>
+
+<style scoped>
+/* ── Text clamping ─────────────────────────────────────────────────────────── */
+.is-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Reference block inside meta ───────────────────────────────────────────── */
+.meta-reference {
+  margin-top: 3px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.35;
+}
+
+/* ── Show more / Show less button ──────────────────────────────────────────── */
+.node-expand-btn {
+  all: unset;
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0284c7;
+  cursor: pointer;
+  line-height: 1;
+  padding: 1px 0;
+  opacity: 0.85;
+  transition: opacity 0.12s ease;
+}
+
+.node-expand-btn:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+</style>

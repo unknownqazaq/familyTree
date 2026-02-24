@@ -213,6 +213,8 @@ const messages = {
       edit: 'Edit',
       viewTree: 'View Tree',
       addPerson: 'Add Person',
+      showMore: 'Show more',
+      showLess: 'Show less',
     },
     labels: {
       designation: 'Designation',
@@ -429,6 +431,8 @@ const messages = {
       edit: 'Редактировать',
       viewTree: 'Смотреть дерево',
       addPerson: 'Добавить человека',
+      showMore: 'Показать ещё',
+      showLess: 'Скрыть',
     },
     labels: {
       designation: 'Титул',
@@ -645,6 +649,8 @@ const messages = {
       edit: 'Өңдеу',
       viewTree: 'Шежірені көру',
       addPerson: 'Адам қосу',
+      showMore: 'Толығырақ',
+      showLess: 'Жасыру',
     },
     labels: {
       designation: 'Лауазым',

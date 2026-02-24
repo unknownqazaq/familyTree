@@ -26,11 +26,20 @@
             class="tree-edge"
           />
         </svg>
-        <TransitionGroup name="node" tag="div" class="tree-nodes">
+        <TransitionGroup name="node" tag="div" class="tree-nodes" :class="{ 'layout-settled': layoutSettled }">
           <TreeNode
             v-for="node in layoutNodes"
             :key="node.id"
-            :style="{ position: 'absolute', left: node.x + 'px', top: node.y + 'px' }"
+            :style="{
+              position: 'absolute',
+              left: node.x + 'px',
+              top: node.y + 'px',
+              width: NODE_W + 'px',
+              maxWidth: NODE_W + 'px',
+              minWidth: NODE_W + 'px',
+              overflow: 'hidden',
+              boxSizing: 'border-box',
+            }"
             :person="node.person"
             :isSelected="node.id === selectedNodeId"
             :isCollapsed="node.isCollapsed"
@@ -168,8 +177,43 @@ const autoCentered     = ref(false)
 const panTransitioning = ref(false)
 let   panTransitionTimeout = null
 
+// ─── Node size tracking (ResizeObserver → layout engine) ─────────────────────
+// Maps node id (string) → measured outer height (px)
+const nodeSizeMap = ref(new Map())
+const nodeElMap   = new Map()   // id → DOM Element (plain, non-reactive)
+let   nodeRO      = null        // single shared ResizeObserver
+let   roRafId     = null        // rAF handle for debounced batch update
+
+function _flushNodeSizes(pending) {
+  const next = new Map(nodeSizeMap.value)
+  let changed = false
+  for (const [id, h] of pending) {
+    if (next.get(id) !== h) { next.set(id, h); changed = true }
+  }
+  if (changed) nodeSizeMap.value = next
+}
+
+function registerNodeEl(id, el) {
+  // In Vue 3 <script setup>, template ref on a component → component instance;
+  // the root DOM element is accessible via instance.$el
+  const dom = el?.$el instanceof Element ? el.$el : (el instanceof Element ? el : null)
+  if (dom) {
+    const prev = nodeElMap.get(id)
+    if (prev !== dom) {
+      if (prev) nodeRO?.unobserve(prev)
+      nodeElMap.set(id, dom)
+      nodeRO?.observe(dom)
+    }
+  } else {
+    const prev = nodeElMap.get(id)
+    if (prev) { nodeRO?.unobserve(prev); nodeElMap.delete(id) }
+    const next = new Map(nodeSizeMap.value)
+    if (next.delete(id)) nodeSizeMap.value = next
+  }
+}
+
 // ─── Layout (d3-hierarchy based) ───────────────────────────────────────────────
-const layout = useTreeLayout(computed(() => props.persons), collapsedNodeIds)
+const layout = useTreeLayout(computed(() => props.persons), collapsedNodeIds, nodeSizeMap)
 const { layoutNodes, layoutEdges, sceneBounds, personById, childrenByParentId, rootIds } = layout
 
 // ─── Gestures (CSS transform pan + zoom) ──────────────────────────────────────
@@ -326,12 +370,18 @@ watch(
   { deep: true },
 )
 
-// Auto-center once on first layout
+// Auto-center once on first layout; mark layout as settled for transitions
+const layoutSettled = ref(false)
 watch(
   layoutNodes,
   (nodes) => {
     if (!autoCentered.value && nodes.length > 0) {
-      nextTick(() => { centerTree('auto'); autoCentered.value = true })
+      nextTick(() => {
+        centerTree('auto')
+        autoCentered.value = true
+        // Delay enabling position transitions so initial placement never animates
+        setTimeout(() => { layoutSettled.value = true }, 120)
+      })
     }
   },
   { immediate: true },
@@ -342,6 +392,25 @@ onMounted(() => {
   windowWidth.value = window.innerWidth
   if (windowWidth.value <= 640)      gestures.zoomScale.value = MOBILE_ZOOM_SCALE
   else if (windowWidth.value <= 980) gestures.zoomScale.value = TABLET_ZOOM_SCALE
+
+  // ── ResizeObserver: feed actual node heights back into the layout engine ────
+  nodeRO = new ResizeObserver((entries) => {
+    const pending = new Map()
+    for (const entry of entries) {
+      for (const [id, dom] of nodeElMap) {
+        if (dom !== entry.target) continue
+        // Prefer border-box size (includes padding + border); fallback adds 22px
+        const h = entry.borderBoxSize?.length
+          ? Math.round(entry.borderBoxSize[0].blockSize)
+          : Math.round(entry.contentRect.height + 22)
+        pending.set(id, Math.max(h, NODE_H))
+        break
+      }
+    }
+    if (pending.size === 0) return
+    if (roRafId) cancelAnimationFrame(roRafId)
+    roRafId = requestAnimationFrame(() => { _flushNodeSizes(pending); roRafId = null })
+  })
 
   if (viewportRef.value) {
     const vp = viewportRef.value
@@ -379,6 +448,10 @@ onUnmounted(() => {
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
   gestures.stopViewportDrag()
   gestures.stopTouchGesture()
+  if (roRafId) cancelAnimationFrame(roRafId)
+  nodeRO?.disconnect()
+  nodeRO = null
+  nodeElMap.clear()
   clearTimeout(panTransitionTimeout)
 })
 
@@ -583,8 +656,13 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .tree-node {
-  width: fit-content;
-  min-width: var(--node-width);
+  /* Width is enforced via inline :style from NODE_W constant — CSS below is a
+     safety net so the card never expands beyond its layout slot. */
+  width: 220px !important;
+  max-width: 220px !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden;
   border-radius: 16px;
   border: 1px solid rgba(148, 163, 184, 0.42);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.93), rgba(241, 245, 249, 0.86));
@@ -603,6 +681,12 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   border-color: rgba(99, 102, 241, 0.35);
 }
 
+/* Positions snap immediately so re-layout never creates a visible overlap window.
+   Only hover-lift (transform) and shadow get a visual transition. */
+.layout-settled .tree-node {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
 .root-node {
   border-color: rgba(129, 140, 248, 0.45);
 }
@@ -618,7 +702,9 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: fit-content;
+  min-width: 0;
+  overflow: hidden;
+  flex: 1 1 auto;
 }
 
 .node-dot {
@@ -640,16 +726,24 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   font-weight: 650;
   color: var(--text);
   line-height: 1.25;
-  white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
-  word-break: normal;
+  /* Allow up to 2 lines so the full name is always visible */
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .node-actions {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
+  flex-shrink: 0;   /* never compress — stays pinned to the right */
+  align-self: flex-start;
 }
 
 .icon-btn {
@@ -700,6 +794,10 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   color: #556277;
   font-size: 12px;
   line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  overflow: hidden;
 }
 
 .node-meta {
@@ -707,6 +805,10 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   color: var(--muted);
   font-size: 12px;
   line-height: 1.3;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  overflow: hidden;
 }
 
 .access-badge {
@@ -836,6 +938,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   .tree-node {
     border-radius: 14px;
     padding: 10px 10px 8px;
+    /* mobile breakpoint — keep width in sync with NODE_W responsive override */
   }
 
   .icon-btn {
