@@ -134,6 +134,7 @@ const messages = {
       deletePerson: 'Delete Person',
       deleteConfirm: 'Are you sure you want to delete this person?',
       saveFailed: 'Failed to save person',
+      saveFailedHint: 'Please check that the backend server is running and you are logged in. Try logging out and back in.',
       deleteFailed: 'Failed to delete person',
       excel: {
         title: 'Excel Import / Export',
@@ -154,7 +155,7 @@ const messages = {
         exportSuccess: 'Exported {count} cards.',
         exportFailed: 'Failed to export Excel file.',
         templateReady: 'Template downloaded.',
-        forbidden: 'Only admin can use Excel import and export.',
+        forbidden: 'Only admin and staff can use Excel import and export.',
       },
     },
     settings: {
@@ -352,6 +353,7 @@ const messages = {
       deletePerson: 'Удалить человека',
       deleteConfirm: 'Вы уверены, что хотите удалить этого человека?',
       saveFailed: 'Не удалось сохранить человека',
+      saveFailedHint: 'Проверьте, что сервер запущен и вы авторизованы. Попробуйте выйти и войти снова.',
       deleteFailed: 'Не удалось удалить человека',
       excel: {
         title: 'Импорт / экспорт Excel',
@@ -372,7 +374,7 @@ const messages = {
         exportSuccess: 'Экспортировано карточек: {count}.',
         exportFailed: 'Не удалось экспортировать Excel файл.',
         templateReady: 'Шаблон скачан.',
-        forbidden: 'Только администратор может использовать импорт и экспорт Excel.',
+        forbidden: 'Только администратор или сотрудник может использовать импорт и экспорт Excel.',
       },
     },
     settings: {
@@ -570,6 +572,7 @@ const messages = {
       deletePerson: 'Адамды жою',
       deleteConfirm: 'Осы адамды жойғыңыз келетініне сенімдісіз бе?',
       saveFailed: 'Адамды сақтау мүмкін болмады',
+      saveFailedHint: 'Сервер жұмыс істеп тұрғанын және жүйеге кіргеніңізді тексеріңіз. Шығып, қайта кіріп көріңіз.',
       deleteFailed: 'Адамды жою мүмкін болмады',
       excel: {
         title: 'Excel Import / Export',
@@ -590,7 +593,7 @@ const messages = {
         exportSuccess: 'Exported {count} cards.',
         exportFailed: 'Failed to export Excel file.',
         templateReady: 'Template downloaded.',
-        forbidden: 'Only admin can use Excel import and export.',
+        forbidden: 'Excel импорты мен экспортын тек әкімші немесе қызметкер пайдалана алады.',
       },
     },
     settings: {

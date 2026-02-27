@@ -66,7 +66,7 @@ const treeStore = useTreeStore()
 const authStore = useAuthStore()
 
 const isEdit = computed(() => !!route.params.id)
-const canUseExcel = computed(() => Boolean(authStore.isAdmin))
+const canUseExcel = computed(() => Boolean(authStore.isStaff))
 const personData = ref(null)
 const loading = ref(false)
 const error = ref(null)
@@ -388,7 +388,13 @@ async function handleSubmit(formData) {
     }
     router.push('/tree')
   } catch (e) {
-    error.value = e.response?.data?.error || t('person.saveFailed')
+    const status = e.response?.status
+    const msg = e.response?.data?.error
+    if (status === 500 && msg === 'failed to create person') {
+      error.value = t('person.saveFailed') + '. ' + t('person.saveFailedHint')
+    } else {
+      error.value = msg || t('person.saveFailed')
+    }
   } finally {
     loading.value = false
   }
