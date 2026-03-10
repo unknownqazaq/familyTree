@@ -24,8 +24,13 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
+    const url = originalRequest?.url || ''
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't intercept 401 on auth endpoints (login/register/refresh) —
+    // those are expected failures, not expired-token scenarios.
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh')
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true
 
       const refreshToken = safeGetItem('refresh_token')

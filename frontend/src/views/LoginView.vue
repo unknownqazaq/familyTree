@@ -52,7 +52,12 @@ async function handleLogin() {
     const redirect = route.query.redirect || '/'
     router.push(redirect)
   } catch (e) {
-    error.value = t('auth.loginFailed')
+    const serverMsg = e.response?.data?.error
+    if (serverMsg === 'invalid credentials') {
+      error.value = t('auth.invalidCredentials')
+    } else {
+      error.value = t('auth.loginFailed')
+    }
   } finally {
     loading.value = false
   }

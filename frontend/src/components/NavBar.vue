@@ -193,7 +193,7 @@ function handleLogout() {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .navbar-inner {
     padding: 10px 12px;
     gap: 0;
