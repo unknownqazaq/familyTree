@@ -5,7 +5,7 @@
  * Reduces: submitPersonForm CC 17→7, confirmDelete CC 8→3.
  * Eliminates: D1 (duplicated catch block), D2 (modal-open preamble ×3).
  */
-import { computed, reactive, ref } from 'vue'
+import { computed, nextTick, reactive, ref } from 'vue'
 
 export function useTreeViewModal({
   authStore,
@@ -16,6 +16,7 @@ export function useTreeViewModal({
   childrenByParentId,
   selectedNodeId,
   emit,
+  expandToNode,
 }) {
   // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -183,7 +184,10 @@ export function useTreeViewModal({
       await treeStore.fetchFullTree()
       closeModal(true)
 
-      if (newId) {
+      if (newId && expandToNode) {
+        await nextTick()
+        await expandToNode(newId)
+      } else if (newId) {
         selectedNodeId.value = newId
         emit('node-click', newId)
       }

@@ -16,7 +16,7 @@ export const useTreeStore = defineStore('tree', () => {
     error.value = null
     try {
       const { data } = await api.get('/tree')
-      persons.value = data
+      persons.value = Array.isArray(data) ? data : []
     } catch (e) {
       error.value = e.response?.data?.error || 'Failed to load tree'
     } finally {

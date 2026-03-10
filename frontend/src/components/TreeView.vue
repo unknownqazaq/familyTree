@@ -249,6 +249,7 @@ const modal = useTreeViewModal({
   childrenByParentId,
   selectedNodeId,
   emit,
+  expandToNode,
 })
 const { modalState, formState, parentOptions, activePerson, activeChildrenCount,
         mutationLoading, mutationError, closeModal, submitPersonForm, confirmDelete } = modal
