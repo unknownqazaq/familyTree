@@ -34,12 +34,16 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'login', query: { redirect: to.fullPath } })
     return
+  }
+
+  if (to.meta.requiresAdmin || to.meta.requiresStaff) {
+    await authStore.waitForUser()
   }
 
   if (to.meta.requiresAdmin && authStore.user?.role !== 'admin') {

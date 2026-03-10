@@ -52,7 +52,7 @@ async function handleLogin() {
     const redirect = route.query.redirect || '/'
     router.push(redirect)
   } catch (e) {
-    error.value = e.response?.data?.error || t('auth.loginFailed')
+    error.value = t('auth.loginFailed')
   } finally {
     loading.value = false
   }

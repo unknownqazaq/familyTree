@@ -20,9 +20,10 @@
         <div class="path-finder">
           <SearchBar :placeholder="t('search.fromPlaceholder')" @select="onFromSelect" />
           <SearchBar :placeholder="t('search.toPlaceholder')" @select="onToSelect" />
-          <button class="btn-primary" @click="findPath" :disabled="!pathFrom || !pathTo">
+          <button class="btn-primary" @click="findPath">
             {{ t('tree.findPath') }}
           </button>
+          <p v-if="pathError" class="error-msg path-error">{{ pathError }}</p>
         </div>
       </div>
     </div>
@@ -74,6 +75,7 @@ const router = useRouter()
 const selectedPerson = ref(null)
 const pathFrom = ref(null)
 const pathTo = ref(null)
+const pathError = ref('')
 const treeViewRef = ref(null)
 const { t } = useI18n()
 
@@ -107,16 +109,21 @@ function onSearchSelect(person) {
 
 function onFromSelect(person) {
   pathFrom.value = person
+  pathError.value = ''
 }
 
 function onToSelect(person) {
   pathTo.value = person
+  pathError.value = ''
 }
 
 async function findPath() {
-  if (pathFrom.value && pathTo.value) {
-    await treeStore.findPath(pathFrom.value.id, pathTo.value.id)
+  if (!pathFrom.value || !pathTo.value) {
+    pathError.value = t('tree.pathSelectBoth')
+    return
   }
+  pathError.value = ''
+  await treeStore.findPath(pathFrom.value.id, pathTo.value.id)
 }
 
 function navigateToTree(nodeId) {
@@ -212,6 +219,10 @@ function navigateToTree(nodeId) {
 .path-finder button {
   min-height: 42px;
   width: 100%;
+}
+
+.path-error {
+  grid-column: 1 / -1;
 }
 
 .panel-grid {

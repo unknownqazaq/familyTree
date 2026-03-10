@@ -1,9 +1,14 @@
 <template>
   <nav class="navbar">
     <div class="navbar-inner">
-      <router-link to="/" class="navbar-brand">{{ t('nav.brand') }}</router-link>
+      <div class="navbar-top">
+        <router-link to="/" class="navbar-brand">{{ t('nav.brand') }}</router-link>
+        <button class="burger-btn" @click="menuOpen = !menuOpen" aria-label="Toggle menu">
+          {{ menuOpen ? '\u2715' : '\u2630' }}
+        </button>
+      </div>
 
-      <div class="navbar-links">
+      <div class="navbar-links" :class="{ 'is-open': menuOpen }">
         <router-link to="/tree">{{ t('nav.tree') }}</router-link>
         <template v-if="authStore.isAuthenticated">
           <router-link to="/person/new">{{ t('nav.addPerson') }}</router-link>
@@ -31,19 +36,27 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '../i18n'
 import { useAuthStore } from '../stores/auth'
 
 const authStore = useAuthStore()
+const route = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
+
+const menuOpen = ref(false)
 
 const localeValue = computed({
   get: () => locale.value,
   set: (value) => setLocale(value),
+})
+
+// Close menu on route change
+watch(() => route.path, () => {
+  menuOpen.value = false
 })
 
 function handleLogout() {
@@ -70,6 +83,22 @@ function handleLogout() {
   justify-content: space-between;
   min-height: 68px;
   padding: 0 20px;
+}
+
+.navbar-top {
+  display: contents;
+}
+
+.burger-btn {
+  display: none;
+  background: none;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 8px;
+  font-size: 20px;
+  line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: #1e1b4b;
 }
 
 .navbar-brand {
@@ -167,7 +196,20 @@ function handleLogout() {
 @media (max-width: 640px) {
   .navbar-inner {
     padding: 10px 12px;
-    gap: 8px;
+    gap: 0;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .navbar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .burger-btn {
+    display: block;
   }
 
   .navbar-brand {
@@ -175,10 +217,15 @@ function handleLogout() {
   }
 
   .navbar-links {
-    display: grid;
+    display: none;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     width: 100%;
+    padding-top: 10px;
+  }
+
+  .navbar-links.is-open {
+    display: grid;
   }
 
   .navbar-links > a,

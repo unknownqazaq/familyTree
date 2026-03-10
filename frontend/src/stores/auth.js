@@ -7,6 +7,9 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const token = ref(safeGetItem('access_token') || null)
 
+  let _userReadyResolve
+  const _userReady = new Promise((r) => { _userReadyResolve = r })
+
   const isAuthenticated = computed(() => !!token.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isStaff = computed(() => ['admin', 'staff'].includes(user.value?.role))
@@ -55,9 +58,15 @@ export const useAuthStore = defineStore('auth', () => {
     safeRemoveItem('refresh_token')
   }
 
+  function waitForUser() {
+    return _userReady
+  }
+
   // Initialize: fetch user if token exists
   if (token.value) {
-    fetchUser()
+    fetchUser().finally(() => _userReadyResolve())
+  } else {
+    _userReadyResolve()
   }
 
   return {
@@ -71,6 +80,7 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUser,
     updateProfile,
     deleteAccount,
+    waitForUser,
     logout,
   }
 })

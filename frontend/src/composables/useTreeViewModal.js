@@ -119,7 +119,7 @@ export function useTreeViewModal({
     resetFormState()
     const parent = personById.value.get(nodeId)
     formState.parent_id = String(nodeId)
-    formState.access = parent?.access || 'private'
+    formState.access = 'private'
   }
 
   function openEditModal(nodeId) {
@@ -171,20 +171,22 @@ export function useTreeViewModal({
 
     mutationLoading.value = true
     try {
+      let newId = null
       if (modalState.value === 'add') {
         const created = await treeStore.createPerson(payload)
-        if (created?.id) {
-          selectedNodeId.value = created.id
-          emit('node-click', created.id)
-        }
+        newId = created?.id || null
       } else if (modalState.value === 'edit' && activeNodeId.value != null) {
         await treeStore.updatePerson(activeNodeId.value, payload)
-        selectedNodeId.value = activeNodeId.value
-        emit('node-click', activeNodeId.value)
+        newId = activeNodeId.value
       }
 
       await treeStore.fetchFullTree()
       closeModal(true)
+
+      if (newId) {
+        selectedNodeId.value = newId
+        emit('node-click', newId)
+      }
     } catch (error) {
       handleMutationError(error, 'treeMap.saveFailed')
     } finally {

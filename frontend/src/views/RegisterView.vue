@@ -5,13 +5,13 @@
 
       <form @submit.prevent="handleRegister">
         <div class="form-group">
-          <label>{{ t('auth.firstNameLabel') }}</label>
-          <input v-model="firstName" type="text" :placeholder="t('auth.firstNamePlaceholder')" />
+          <label>{{ t('auth.firstNameLabel') }} *</label>
+          <input v-model="firstName" type="text" required :placeholder="t('auth.firstNamePlaceholder')" />
         </div>
 
         <div class="form-group">
-          <label>{{ t('auth.lastNameLabel') }}</label>
-          <input v-model="lastName" type="text" :placeholder="t('auth.lastNamePlaceholder')" />
+          <label>{{ t('auth.lastNameLabel') }} *</label>
+          <input v-model="lastName" type="text" required :placeholder="t('auth.lastNamePlaceholder')" />
         </div>
 
         <div class="form-group">
