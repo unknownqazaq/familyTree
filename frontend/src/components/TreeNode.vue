@@ -34,11 +34,16 @@
           @click.stop="$emit('delete')"
         >✕</button>
         <button
-          v-if="hasChildren"
+          v-if="hasChildren || isLoading"
           class="icon-btn toggle-btn"
+          :class="{ 'is-loading': isLoading }"
           :title="isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')"
+          :disabled="isLoading"
           @click.stop="$emit('toggle')"
-        >{{ isCollapsed ? '›' : '‹' }}</button>
+        >
+          <span v-if="isLoading" class="node-spinner"></span>
+          <template v-else>{{ isCollapsed ? '›' : '‹' }}</template>
+        </button>
       </div>
     </div>
 
@@ -87,6 +92,7 @@ const props = defineProps({
   person:              { type: Object,  required: true },
   isSelected:          { type: Boolean, default: false },
   isCollapsed:         { type: Boolean, default: false },
+  isLoading:           { type: Boolean, default: false },
   hasChildren:         { type: Boolean, default: false },
   depth:               { type: Number,  default: 0 },
   canManage:           { type: Boolean, default: false },
@@ -147,5 +153,25 @@ function handleClick() {
 .node-expand-btn:hover {
   opacity: 1;
   text-decoration: underline;
+}
+
+/* ── Loading spinner on toggle button ────────────────────────────────────── */
+.toggle-btn.is-loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.node-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(30, 41, 59, 0.2);
+  border-top-color: #1e293b;
+  border-radius: 50%;
+  animation: node-spin 0.6s linear infinite;
+}
+
+@keyframes node-spin {
+  to { transform: rotate(360deg); }
 }
 </style>

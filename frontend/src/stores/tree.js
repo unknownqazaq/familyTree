@@ -11,17 +11,58 @@ export const useTreeStore = defineStore('tree', () => {
   const loading = ref(false)
   const error = ref(null)
 
+  // Lazy-loading state: tracks which parent IDs have had children fetched
+  const loadedParentIds = ref(new Set())
+  const loadingNodeIds = ref(new Set())
+
   async function fetchFullTree() {
     loading.value = true
     error.value = null
     try {
       const { data } = await api.get('/tree')
       persons.value = Array.isArray(data) ? data : []
+      // Mark all persons with children as "loaded" so lazy-fetch isn't triggered
+      const parentIds = new Set()
+      persons.value.forEach((p) => {
+        if (p.parent_id != null) parentIds.add(p.parent_id)
+      })
+      loadedParentIds.value = parentIds
     } catch (e) {
       error.value = e.response?.data?.error || 'Failed to load tree'
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Lazy-load children for a specific node.
+   * Merges new children into the persons array and marks the parent as loaded.
+   */
+  async function fetchNodeChildren(parentId) {
+    if (loadedParentIds.value.has(parentId)) return
+    const next = new Set(loadingNodeIds.value)
+    next.add(parentId)
+    loadingNodeIds.value = next
+    try {
+      const { data } = await api.get(`/persons/${parentId}/children`)
+      const children = Array.isArray(data) ? data : []
+      if (children.length > 0) {
+        const existingIds = new Set(persons.value.map((p) => p.id))
+        const newPersons = children.filter((p) => !existingIds.has(p.id))
+        if (newPersons.length > 0) {
+          persons.value = [...persons.value, ...newPersons]
+        }
+      }
+      loadedParentIds.value = new Set([...loadedParentIds.value, parentId])
+    } finally {
+      const rm = new Set(loadingNodeIds.value)
+      rm.delete(parentId)
+      loadingNodeIds.value = rm
+    }
+  }
+
+  function isNodeLoading(nodeId) {
+    return loadingNodeIds.value.has(nodeId)
   }
 
   async function fetchTree(personId) {
@@ -107,9 +148,13 @@ export const useTreeStore = defineStore('tree', () => {
     searchResults,
     loading,
     error,
+    loadingNodeIds,
+    loadedParentIds,
     fetchFullTree,
     fetchTree,
     fetchPerson,
+    fetchNodeChildren,
+    isNodeLoading,
     createPerson,
     updatePerson,
     deletePerson,

@@ -47,6 +47,7 @@
             :person="node.person"
             :isSelected="node.id === selectedNodeId"
             :isCollapsed="node.isCollapsed"
+            :isLoading="treeStore.isNodeLoading(node.id)"
             :hasChildren="node.hasChildren"
             :depth="node.depth"
             :canManage="canManage"
@@ -302,11 +303,21 @@ function centerTree(behavior = 'smooth') {
   if (targetId != null) focusNode(targetId, behavior)
 }
 
-// ─── Toggle collapse ──────────────────────────────────────────────────────────
-function toggleNode(nodeId) {
-  const next = new Set(collapsedNodeIds.value)
-  next.has(nodeId) ? next.delete(nodeId) : next.add(nodeId)
-  collapsedNodeIds.value = next   // layout recomputes automatically
+// ─── Toggle collapse (with lazy-load) ────────────────────────────────────────
+async function toggleNode(nodeId) {
+  const isCollapsed = collapsedNodeIds.value.has(nodeId)
+  if (isCollapsed) {
+    // Expanding — lazy-fetch children if not already loaded
+    await treeStore.fetchNodeChildren(nodeId)
+    const next = new Set(collapsedNodeIds.value)
+    next.delete(nodeId)
+    collapsedNodeIds.value = next
+  } else {
+    // Collapsing
+    const next = new Set(collapsedNodeIds.value)
+    next.add(nodeId)
+    collapsedNodeIds.value = next
+  }
 }
 
 // ─── Node selection ───────────────────────────────────────────────────────────
