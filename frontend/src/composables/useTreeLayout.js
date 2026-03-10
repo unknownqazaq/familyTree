@@ -9,7 +9,7 @@ import {
 export const NODE_W = 220
 export const NODE_H = 90
 export const GAP_X = 96
-export const GAP_Y = 28
+export const GAP_Y = 40
 export const SCENE_PAD = 80
 
 export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = null) {
@@ -79,35 +79,75 @@ export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = nu
       cursorX += (maxWidthByDepth.get(depth) || NODE_W) + GAP_X
     }
 
-    const cursorByDepth = new Map()
     const roots = (input.children || []).map((n) => n.id)
 
-    const placeSubtree = (nodeId) => {
-      const node = nodesById.get(nodeId)
-      if (!node) return { center: SCENE_PAD, top: SCENE_PAD, bottom: SCENE_PAD }
-
-      const childIds = edges.filter((e) => e.parentId === nodeId).map((e) => e.childId)
-      const childBoxes = childIds.map((id) => placeSubtree(id))
-
-      let desiredY
-      if (childBoxes.length === 0) {
-        desiredY = cursorByDepth.get(node.depth) ?? SCENE_PAD
-      } else {
-        const childrenCenter = childBoxes.reduce((sum, box) => sum + box.center, 0) / childBoxes.length
-        desiredY = childrenCenter - node.h / 2
-      }
-
-      const minY = cursorByDepth.get(node.depth) ?? SCENE_PAD
-      node.y = Math.max(minY, desiredY)
-      node.x = depthX.get(node.depth) ?? SCENE_PAD
-      cursorByDepth.set(node.depth, node.y + node.h + GAP_Y)
-
-      const top = Math.min(node.y, ...childBoxes.map((b) => b.top))
-      const bottom = Math.max(node.y + node.h, ...childBoxes.map((b) => b.bottom))
-      return { center: node.y + node.h / 2, top, bottom }
+    // Build children lookup from edges
+    const childrenOf = new Map()
+    for (const edge of edges) {
+      if (!childrenOf.has(edge.parentId)) childrenOf.set(edge.parentId, [])
+      childrenOf.get(edge.parentId).push(edge.childId)
     }
 
-    for (const rootId of roots) placeSubtree(rootId)
+    // Phase 1: compute subtree height (bottom-up)
+    const subtreeH = new Map()
+    const computeHeight = (nodeId) => {
+      const node = nodesById.get(nodeId)
+      if (!node) return 0
+      const kids = childrenOf.get(nodeId) || []
+      if (kids.length === 0) {
+        subtreeH.set(nodeId, node.h)
+        return node.h
+      }
+      let totalChildH = 0
+      for (let i = 0; i < kids.length; i++) {
+        if (i > 0) totalChildH += GAP_Y
+        totalChildH += computeHeight(kids[i])
+      }
+      const h = Math.max(node.h, totalChildH)
+      subtreeH.set(nodeId, h)
+      return h
+    }
+
+    // Phase 2: position nodes (top-down)
+    const positionNode = (nodeId, topY) => {
+      const node = nodesById.get(nodeId)
+      if (!node) return
+      node.x = depthX.get(node.depth) ?? SCENE_PAD
+      const kids = childrenOf.get(nodeId) || []
+      if (kids.length === 0) {
+        node.y = topY
+        return
+      }
+      // Place children sequentially within allocated space
+      let cursor = topY
+      const myH = subtreeH.get(nodeId) || node.h
+      const totalChildH = kids.reduce((sum, kid) => sum + (subtreeH.get(kid) || 0), 0)
+        + (kids.length - 1) * GAP_Y
+      // Center children block within allocated space
+      cursor = topY + Math.max(0, (myH - totalChildH) / 2)
+      for (const kidId of kids) {
+        const kidH = subtreeH.get(kidId) || 0
+        positionNode(kidId, cursor)
+        cursor += kidH + GAP_Y
+      }
+      // Center parent vertically between first and last child
+      const firstChild = nodesById.get(kids[0])
+      const lastChild = nodesById.get(kids[kids.length - 1])
+      if (firstChild && lastChild) {
+        const childrenMid = (firstChild.y + firstChild.h / 2 + lastChild.y + lastChild.h / 2) / 2
+        node.y = childrenMid - node.h / 2
+      } else {
+        node.y = topY
+      }
+    }
+
+    // Place roots sequentially
+    for (const rootId of roots) computeHeight(rootId)
+    let rootCursor = SCENE_PAD
+    for (const rootId of roots) {
+      positionNode(rootId, rootCursor)
+      rootCursor += (subtreeH.get(rootId) || NODE_H) + GAP_Y
+    }
 
     const nodes = [...nodesById.values()]
     const normalizedMinY = nodes.length > 0 ? Math.min(...nodes.map((n) => n.y)) : SCENE_PAD
