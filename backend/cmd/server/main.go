@@ -92,8 +92,9 @@ func main() {
 		tree.Use(middleware.OptionalAuth(cfg.JWTSecret))
 		{
 			tree.GET("", treeHandler.GetFullTree)
-			tree.GET("/:id", treeHandler.GetTree)
+			tree.GET("/roots", treeHandler.GetRoots)
 			tree.GET("/path/:from/:to", treeHandler.FindPath)
+			tree.GET("/:id", treeHandler.GetTree)
 		}
 
 		// Admin routes

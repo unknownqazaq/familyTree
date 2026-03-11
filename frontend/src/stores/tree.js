@@ -15,6 +15,63 @@ export const useTreeStore = defineStore('tree', () => {
   const loadedParentIds = ref(new Set())
   const loadingNodeIds = ref(new Set())
 
+  /**
+   * Load only root nodes (parent_id = null).
+   * Children are fetched lazily on expand via fetchNodeChildren().
+   */
+  async function fetchRoots() {
+    loading.value = true
+    error.value = null
+    try {
+      const { data } = await api.get('/tree/roots')
+      persons.value = Array.isArray(data) ? data : []
+      // Reset loaded state so children are fetched lazily on expand
+      loadedParentIds.value = new Set()
+    } catch (e) {
+      error.value = e.response?.data?.error || 'Failed to load tree'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /** Add a newly created person optimistically and invalidate its parent's loaded cache. */
+  function addPersonToStore(person) {
+    if (!person || persons.value.some((p) => p.id === person.id)) return
+    persons.value = [...persons.value, person]
+    if (person.parent_id != null) {
+      const next = new Set(loadedParentIds.value)
+      next.delete(person.parent_id)
+      loadedParentIds.value = next
+    }
+  }
+
+  /** Replace a person in-place after an update, preserving has_children. */
+  function updatePersonInStore(updated) {
+    if (!updated) return
+    persons.value = persons.value.map((p) =>
+      p.id === updated.id ? { ...p, ...updated, has_children: p.has_children } : p,
+    )
+  }
+
+  /** Remove a deleted person and all its loaded descendants from the store. */
+  function removePersonFromStore(id) {
+    const toRemove = new Set([id])
+    let changed = true
+    while (changed) {
+      changed = false
+      for (const p of persons.value) {
+        if (p.parent_id != null && toRemove.has(p.parent_id) && !toRemove.has(p.id)) {
+          toRemove.add(p.id)
+          changed = true
+        }
+      }
+    }
+    persons.value = persons.value.filter((p) => !toRemove.has(p.id))
+    const next = new Set(loadedParentIds.value)
+    toRemove.forEach((removedId) => next.delete(removedId))
+    loadedParentIds.value = next
+  }
+
   async function fetchFullTree() {
     loading.value = true
     error.value = null
@@ -150,11 +207,15 @@ export const useTreeStore = defineStore('tree', () => {
     error,
     loadingNodeIds,
     loadedParentIds,
+    fetchRoots,
     fetchFullTree,
     fetchTree,
     fetchPerson,
     fetchNodeChildren,
     isNodeLoading,
+    addPersonToStore,
+    updatePersonInStore,
+    removePersonFromStore,
     createPerson,
     updatePerson,
     deletePerson,

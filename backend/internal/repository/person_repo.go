@@ -72,10 +72,68 @@ func (r *PersonRepository) SearchForUser(query string, userID int, limit int) ([
 	return persons, err
 }
 
+// setHasChildren marks which persons in the slice have at least one child,
+// using a single batch query. Errors are non-fatal; the field stays false.
+func (r *PersonRepository) setHasChildren(persons []models.Person) {
+	if len(persons) == 0 {
+		return
+	}
+	ids := make([]int, len(persons))
+	for i, p := range persons {
+		ids[i] = p.ID
+	}
+	query, args, err := sqlx.In("SELECT DISTINCT parent_id FROM persons WHERE parent_id IN (?)", ids)
+	if err != nil {
+		return
+	}
+	query = r.db.Rebind(query)
+	var parentIds []int
+	if err := r.db.Select(&parentIds, query, args...); err != nil {
+		return
+	}
+	parentSet := make(map[int]bool, len(parentIds))
+	for _, id := range parentIds {
+		parentSet[id] = true
+	}
+	for i := range persons {
+		persons[i].HasChildren = parentSet[persons[i].ID]
+	}
+}
+
 func (r *PersonRepository) GetChildren(parentID int) ([]models.Person, error) {
 	children := []models.Person{}
 	err := r.db.Select(&children, "SELECT * FROM persons WHERE parent_id = $1 ORDER BY name", parentID)
-	return children, err
+	if err != nil {
+		return nil, err
+	}
+	r.setHasChildren(children)
+	return children, nil
+}
+
+func (r *PersonRepository) GetRootsPublic() ([]models.Person, error) {
+	persons := []models.Person{}
+	err := r.db.Select(&persons,
+		"SELECT * FROM persons WHERE parent_id IS NULL AND access = 'public' ORDER BY id")
+	if err != nil {
+		return nil, err
+	}
+	r.setHasChildren(persons)
+	return persons, nil
+}
+
+func (r *PersonRepository) GetRootsForUser(userID int) ([]models.Person, error) {
+	persons := []models.Person{}
+	err := r.db.Select(&persons,
+		`SELECT * FROM persons
+		WHERE parent_id IS NULL
+		AND (access = 'public' OR created_by = $1
+			OR id IN (SELECT person_id FROM person_editors WHERE user_id = $1))
+		ORDER BY id`, userID)
+	if err != nil {
+		return nil, err
+	}
+	r.setHasChildren(persons)
+	return persons, nil
 }
 
 func (r *PersonRepository) GetAllPublic() ([]models.Person, error) {

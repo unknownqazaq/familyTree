@@ -176,12 +176,13 @@ export function useTreeViewModal({
       if (modalState.value === 'add') {
         const created = await treeStore.createPerson(payload)
         newId = created?.id || null
+        treeStore.addPersonToStore(created)
       } else if (modalState.value === 'edit' && activeNodeId.value != null) {
-        await treeStore.updatePerson(activeNodeId.value, payload)
+        const updated = await treeStore.updatePerson(activeNodeId.value, payload)
         newId = activeNodeId.value
+        treeStore.updatePersonInStore(updated)
       }
 
-      await treeStore.fetchFullTree()
       closeModal(true)
 
       if (newId && expandToNode) {
@@ -206,7 +207,7 @@ export function useTreeViewModal({
     try {
       const deletingId = activeNodeId.value
       await treeStore.deletePerson(deletingId)
-      await treeStore.fetchFullTree()
+      treeStore.removePersonFromStore(deletingId)
       if (selectedNodeId.value === deletingId) selectedNodeId.value = null
       closeModal(true)
     } catch (error) {

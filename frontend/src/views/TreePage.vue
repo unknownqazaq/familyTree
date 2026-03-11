@@ -88,7 +88,7 @@ const pathNodeIds = computed(() => {
 })
 
 onMounted(async () => {
-  await treeStore.fetchFullTree()
+  await treeStore.fetchRoots()
 
   if (route.params.id) {
     const id = parseInt(route.params.id)

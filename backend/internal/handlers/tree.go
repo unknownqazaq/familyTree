@@ -36,6 +36,19 @@ func (h *TreeHandler) GetTree(c *gin.Context) {
 	c.JSON(http.StatusOK, tree)
 }
 
+func (h *TreeHandler) GetRoots(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid, _ := userID.(int)
+
+	persons, err := h.treeService.GetRoots(uid)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get roots"})
+		return
+	}
+
+	c.JSON(http.StatusOK, persons)
+}
+
 func (h *TreeHandler) GetFullTree(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid, _ := userID.(int)

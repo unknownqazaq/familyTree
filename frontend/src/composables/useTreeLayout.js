@@ -52,7 +52,7 @@ export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = nu
         depth,
         parentId:    d.parent?.data.id === 'VIRTUAL_ROOT' ? null : (d.parent?.data.id ?? null),
         person:      d.data.person,
-        hasChildren: (childrenByParentId.value.get(d.data.id) || []).length > 0,
+        hasChildren: d.data.person?.has_children === true || (childrenByParentId.value.get(d.data.id) || []).length > 0,
         isCollapsed: collapsedNodeIdsRef.value.has(d.data.id),
         w: NODE_W,
         h: NODE_H,

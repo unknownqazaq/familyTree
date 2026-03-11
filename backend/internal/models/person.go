@@ -13,6 +13,8 @@ type Person struct {
 	CreatedBy   *int      `json:"created_by" db:"created_by"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+	// Computed field — not stored in DB; set by specific repo queries.
+	HasChildren bool `json:"has_children" db:"-"`
 }
 
 type CreatePersonRequest struct {

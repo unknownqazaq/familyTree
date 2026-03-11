@@ -54,6 +54,13 @@ func (s *TreeService) buildTree(node *models.TreeNode, depth int, userID int) {
 	}
 }
 
+func (s *TreeService) GetRoots(userID int) ([]models.Person, error) {
+	if userID > 0 {
+		return s.personRepo.GetRootsForUser(userID)
+	}
+	return s.personRepo.GetRootsPublic()
+}
+
 func (s *TreeService) GetFullTree(userID int) ([]models.Person, error) {
 	if userID > 0 {
 		return s.personRepo.GetAllForUser(userID)
