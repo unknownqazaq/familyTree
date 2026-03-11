@@ -567,20 +567,20 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 
 <style>
 .tree-view {
-  --bg: #eef4ff;
-  --panel: rgba(255, 255, 255, 0.78);
-  --panel2: rgba(255, 255, 255, 0.92);
-  --border: rgba(148, 163, 184, 0.35);
-  --text: #0f172a;
-  --muted: #64748b;
-  --shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+  --bg: #fef9f0;
+  --panel: rgba(255, 253, 245, 0.78);
+  --panel2: rgba(255, 253, 245, 0.92);
+  --border: rgba(231, 219, 200, 0.45);
+  --text: #1c1917;
+  --muted: #78716c;
+  --shadow: 0 18px 45px rgba(28, 25, 23, 0.12);
   --radius: 18px;
   --gap-x: 34px;
   --gap-y: 16px;
   --node-width: 240px;
-  --line-color: rgba(100, 116, 139, 0.34);
-  --accent: #38bdf8;
-  --accent2: #818cf8;
+  --line-color: rgba(180, 83, 9, 0.28);
+  --accent: #f59e0b;
+  --accent2: #d97706;
   position: relative;
   width: 100%;
   height: 100%;
@@ -589,11 +589,54 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   background:
-    radial-gradient(1000px 500px at 15% 5%, rgba(125, 211, 252, 0.24), transparent 58%),
-    radial-gradient(820px 420px at 78% 20%, rgba(129, 140, 248, 0.2), transparent 62%),
-    linear-gradient(175deg, var(--panel), rgba(241, 245, 249, 0.84));
+    radial-gradient(1000px 500px at 15% 5%, rgba(253, 230, 138, 0.22), transparent 58%),
+    radial-gradient(820px 420px at 78% 20%, rgba(217, 119, 6, 0.12), transparent 62%),
+    linear-gradient(175deg, var(--panel), rgba(250, 247, 237, 0.84));
   color: var(--text);
   backdrop-filter: blur(8px);
+}
+
+/* Dark mode tree overrides */
+[data-theme="dark"] .tree-view {
+  --bg: #1c1917;
+  --panel: rgba(41, 37, 36, 0.82);
+  --panel2: rgba(41, 37, 36, 0.95);
+  --border: rgba(87, 83, 78, 0.55);
+  --text: #fef3c7;
+  --muted: #a8a29e;
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.4);
+  --line-color: rgba(245, 158, 11, 0.22);
+  --accent: #f59e0b;
+  --accent2: #fbbf24;
+}
+
+[data-theme="dark"] .tree-node {
+  background: linear-gradient(180deg, rgba(41, 37, 36, 0.96), rgba(28, 25, 23, 0.92));
+  border-color: rgba(87, 83, 78, 0.55);
+}
+
+[data-theme="dark"] .tree-node:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="dark"] .node-designation,
+[data-theme="dark"] .node-meta { color: #a8a29e; }
+
+[data-theme="dark"] .icon-btn {
+  background: rgba(41, 37, 36, 0.9);
+  border-color: rgba(87, 83, 78, 0.6);
+  color: #d6d3d1;
+}
+
+[data-theme="dark"] .icon-btn:hover {
+  background: rgba(55, 48, 44, 0.95);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+[data-theme="dark"] .tree-viewport {
+  background:
+    radial-gradient(860px 400px at 10% 10%, rgba(41, 37, 36, 0.8), transparent 60%),
+    rgba(28, 25, 23, 0.75);
 }
 
 .tree-view:fullscreen {
@@ -751,12 +794,12 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 
 /* ── Selected node pulse ──────────────────────────────────────────────────── */
 @keyframes node-pulse {
-  0%, 100% { outline-color: rgba(56, 189, 248, 0.45); }
-  50%       { outline-color: rgba(56, 189, 248, 0.85); }
+  0%, 100% { outline-color: rgba(245, 158, 11, 0.45); }
+  50%       { outline-color: rgba(245, 158, 11, 0.90); }
 }
 
 .selected-node {
-  outline: 2px solid rgba(56, 189, 248, 0.45);
+  outline: 2px solid rgba(245, 158, 11, 0.55);
   outline-offset: 2px;
   animation: node-pulse 2s ease infinite;
 }
@@ -770,8 +813,8 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   box-sizing: border-box !important;
   overflow: hidden;
   border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.42);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.93), rgba(241, 245, 249, 0.86));
+  border: 1px solid rgba(231, 219, 200, 0.55);
+  background: linear-gradient(180deg, rgba(255, 253, 245, 0.95), rgba(250, 247, 240, 0.90));
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.14);
   padding: 14px 16px;
   display: flex;
@@ -782,9 +825,9 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .tree-node:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
-  border-color: rgba(99, 102, 241, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(28, 25, 23, 0.14);
+  border-color: rgba(217, 119, 6, 0.38);
 }
 
 /* Positions snap immediately so re-layout never creates a visible overlap window.
@@ -794,7 +837,8 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .root-node {
-  border-color: rgba(129, 140, 248, 0.45);
+  border-color: rgba(217, 119, 6, 0.5);
+  box-shadow: 0 10px 26px rgba(217, 119, 6, 0.14);
 }
 
 .node-header {

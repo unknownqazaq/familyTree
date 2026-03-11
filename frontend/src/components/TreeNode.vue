@@ -9,9 +9,9 @@
     :data-node-id="person.id"
     @click.stop="handleClick"
   >
-    <!-- Section 1: Full name, no truncation -->
+    <!-- Section 1: Avatar + name -->
     <div class="node-header">
-      <span class="node-dot"></span>
+      <span class="node-avatar" :style="{ background: avatarGradient }">{{ avatarLetter }}</span>
       <span class="node-label">{{ person.name }}</span>
     </div>
 
@@ -120,6 +120,20 @@ const expandedMeta  = ref(false)
 const longDesig = computed(() => (props.person?.designation?.length ?? 0) > CLAMP_THRESHOLD)
 const longMeta  = computed(() => (props.person?.reference?.length ?? 0) > CLAMP_THRESHOLD)
 
+// Avatar: first letter + deterministic warm hue from person id
+const avatarLetter = computed(() => {
+  const name = props.person?.name || '?'
+  return name.charAt(0).toUpperCase()
+})
+
+const avatarGradient = computed(() => {
+  const id  = props.person?.id ?? 0
+  const hue = ((id * 137) % 360)
+  // Keep hues in warm range with some variety
+  const warmHue = (30 + hue * 0.55) % 360
+  return `linear-gradient(135deg, hsl(${warmHue}, 55%, 48%), hsl(${(warmHue + 25) % 360}, 60%, 38%))`
+})
+
 function handleClick() {
   if (Date.now() < props.suppressClickUntil) return
   emit('click')
@@ -127,6 +141,24 @@ function handleClick() {
 </script>
 
 <style scoped>
+/* ── Avatar ────────────────────────────────────────────────────────────────── */
+.node-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  font-family: var(--font-serif, Georgia, serif);
+}
+
 /* ── Text clamping ─────────────────────────────────────────────────────────── */
 .is-clamped {
   display: -webkit-box;

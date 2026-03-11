@@ -9,6 +9,24 @@
       </div>
 
       <div class="navbar-right">
+        <!-- Dark mode toggle -->
+        <button class="theme-btn" :title="dark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleTheme">
+          <svg v-if="dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1"  x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22"   x2="5.64"  y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1"  y1="12" x2="3"  y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64"  y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+
         <div class="lang-switch">
           <select v-model="localeValue" class="lang-select" aria-label="Language">
             <option value="ru">RU</option>
@@ -122,11 +140,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '../i18n'
 import { useAuthStore } from '../stores/auth'
+import { useTheme } from '../composables/useTheme'
 
 const authStore = useAuthStore()
 const route  = useRoute()
 const router = useRouter()
 const { t, locale } = useI18n()
+const { dark, toggle: toggleTheme } = useTheme()
 
 const dropdownOpen = ref(false)
 const mobileOpen   = ref(false)
@@ -181,9 +201,14 @@ function handleLogout() {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(255, 255, 255, 0.88);
-  border-bottom: 1px solid rgba(203, 213, 225, 0.65);
+  background: rgba(255, 253, 245, 0.88);
+  border-bottom: 1px solid var(--c-border, rgba(231, 219, 200, 0.65));
   backdrop-filter: blur(12px);
+  transition: background 0.3s ease;
+}
+
+[data-theme="dark"] .navbar {
+  background: rgba(28, 25, 23, 0.92);
 }
 
 .navbar-inner {
@@ -200,12 +225,13 @@ function handleLogout() {
 .navbar-brand {
   font-size: 20px;
   font-weight: 800;
+  font-family: var(--font-serif, Georgia, serif);
   letter-spacing: -0.02em;
-  color: #1e1b4b;
+  color: var(--c-text, #1c1917);
   white-space: nowrap;
   flex-shrink: 0;
 }
-.navbar-brand:hover { text-decoration: none; }
+.navbar-brand:hover { text-decoration: none; color: var(--c-primary); }
 
 /* ── Center links ────────────────────────────────────────────────────────── */
 .navbar-center {
@@ -216,7 +242,7 @@ function handleLogout() {
 }
 
 .navbar-center a {
-  color: #475569;
+  color: var(--c-muted, #78716c);
   font-size: 14px;
   font-weight: 600;
   padding: 7px 12px;
@@ -224,8 +250,8 @@ function handleLogout() {
   transition: background 0.15s, color 0.15s;
 }
 
-.navbar-center a:hover { background: #eef2ff; color: #3730a3; text-decoration: none; }
-.navbar-center a.router-link-active { color: #3730a3; background: rgba(99,102,241,0.12); }
+.navbar-center a:hover { background: rgba(217,119,6,0.10); color: var(--c-primary); text-decoration: none; }
+.navbar-center a.router-link-active { color: var(--c-primary-dark, #b45309); background: rgba(217,119,6,0.12); }
 
 /* ── Right section ───────────────────────────────────────────────────────── */
 .navbar-right {
@@ -250,6 +276,27 @@ function handleLogout() {
   padding: 7px 14px;
   border-radius: 8px;
   text-decoration: none;
+}
+
+/* ── Dark mode toggle ────────────────────────────────────────────────────── */
+.theme-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--c-secondary-bg, #f5f0e8);
+  border: 1px solid var(--c-secondary-border, #e7ddd0);
+  color: var(--c-muted, #78716c);
+  padding: 0;
+  box-shadow: none;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+.theme-btn:hover {
+  background: rgba(217,119,6,0.14);
+  color: var(--c-primary);
+  transform: rotate(20deg) translateY(-1px);
 }
 
 /* ── Language switcher ───────────────────────────────────────────────────── */
@@ -292,7 +339,7 @@ function handleLogout() {
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-dark) 100%);
   color: #fff;
   display: flex;
   align-items: center;
@@ -306,8 +353,8 @@ function handleLogout() {
 }
 
 .avatar-btn:hover .avatar-circle {
-  box-shadow: 0 0 0 4px rgba(99,102,241,0.18);
-  border-color: rgba(99,102,241,0.5);
+  box-shadow: 0 0 0 4px var(--c-primary-glow, rgba(217,119,6,0.22));
+  border-color: var(--c-primary);
 }
 
 .avatar-lg {
@@ -323,10 +370,10 @@ function handleLogout() {
   top: calc(100% + 10px);
   right: 0;
   min-width: 220px;
-  background: rgba(255,255,255,0.97);
-  border: 1px solid rgba(226,232,240,0.9);
+  background: var(--c-surface, rgba(255,253,245,0.97));
+  border: 1px solid var(--c-border, rgba(231,219,200,0.9));
   border-radius: 14px;
-  box-shadow: 0 16px 40px rgba(15,23,42,0.16);
+  box-shadow: 0 16px 40px var(--c-shadow, rgba(28,25,23,0.18));
   backdrop-filter: blur(8px);
   padding: 8px;
   z-index: 100;
@@ -349,7 +396,7 @@ function handleLogout() {
 .dropdown-email {
   font-size: 13px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--c-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -378,7 +425,7 @@ function handleLogout() {
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #334155;
+  color: var(--c-text);
   text-decoration: none;
   background: none;
   border: none;
@@ -389,8 +436,8 @@ function handleLogout() {
 }
 
 .dropdown-item:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: rgba(217,119,6,0.10);
+  color: var(--c-primary-dark, #b45309);
   transform: none;
 }
 
