@@ -351,7 +351,9 @@ function resetView() {
 // ─── Toggle collapse (with lazy-load) ────────────────────────────────────────
 async function toggleNode(nodeId) {
   const isCollapsed = collapsedNodeIds.value.has(nodeId)
-  if (isCollapsed) {
+  // A node whose children haven't been loaded yet should expand, not collapse
+  const childrenLoaded = treeStore.loadedParentIds.has(nodeId)
+  if (isCollapsed || !childrenLoaded) {
     // Expanding — lazy-fetch children if not already loaded
     await treeStore.fetchNodeChildren(nodeId)
     const next = new Set(collapsedNodeIds.value)
