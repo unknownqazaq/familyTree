@@ -545,7 +545,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   --radius: 18px;
   --gap-x: 34px;
   --gap-y: 16px;
-  --node-width: 220px;
+  --node-width: 240px;
   --line-color: rgba(100, 116, 139, 0.34);
   --accent: #38bdf8;
   --accent2: #818cf8;
@@ -732,8 +732,8 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 .tree-node {
   /* Width is enforced via inline :style from NODE_W constant — CSS below is a
      safety net so the card never expands beyond its layout slot. */
-  width: 220px !important;
-  max-width: 220px !important;
+  width: 240px !important;
+  max-width: 240px !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
   overflow: hidden;
@@ -791,9 +791,12 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   font-weight: 700;
   color: var(--text);
   line-height: 1.25;
-  white-space: normal;
-  word-break: break-word;
+  word-break: normal;
   overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .node-actions-row {

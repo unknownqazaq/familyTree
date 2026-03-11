@@ -7,7 +7,7 @@ import {
   buildRootIds,
 } from '../utils/treeUtils.js'
 
-export const NODE_W = 220
+export const NODE_W = 240
 export const NODE_H = 130
 export const GAP_X = 60
 export const GAP_Y = 40
