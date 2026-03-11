@@ -62,6 +62,12 @@
           />
         </TransitionGroup>
       </div>
+      <ZoomControls
+        @zoom-in="handleZoomIn"
+        @zoom-out="handleZoomOut"
+        @fit="fitToScreen"
+        @reset="resetView"
+      />
     </div>
 
     <div v-if="modalState" class="modal-backdrop" @click.self="closeModal()">
@@ -146,6 +152,7 @@ import { useTreeStore } from '../stores/tree'
 import { useTreeLayout, NODE_W, NODE_H } from '../composables/useTreeLayout.js'
 import { useTreeViewModal } from '../composables/useTreeViewModal.js'
 import {
+  clampZoomScale,
   MOBILE_ZOOM_SCALE,
   TABLET_ZOOM_SCALE,
   useViewportGestures,
@@ -158,6 +165,7 @@ import {
   computeNextCollapsedState,
 } from '../utils/treeUtils.js'
 import TreeNode from './TreeNode.vue'
+import ZoomControls from './tree/ZoomControls.vue'
 
 const props = defineProps({
   persons: { type: Array, default: () => [] },
@@ -307,6 +315,39 @@ function centerTree(behavior = 'smooth') {
   if (targetId != null) focusNode(targetId, behavior)
 }
 
+function handleZoomIn() {
+  const vp = viewportRef.value
+  if (!vp) return
+  gestures.applyZoomAtPoint(clampZoomScale(gestures.zoomScale.value + 0.2), vp.clientWidth / 2, vp.clientHeight / 2)
+}
+
+function handleZoomOut() {
+  const vp = viewportRef.value
+  if (!vp) return
+  gestures.applyZoomAtPoint(clampZoomScale(gestures.zoomScale.value - 0.2), vp.clientWidth / 2, vp.clientHeight / 2)
+}
+
+function fitToScreen() {
+  const nds = layoutNodes.value
+  const vp  = viewportRef.value
+  if (!nds.length || !vp) return
+  const minX  = Math.min(...nds.map(n => n.x))
+  const minY  = Math.min(...nds.map(n => n.y))
+  const maxX  = Math.max(...nds.map(n => n.x + n.w))
+  const maxY  = Math.max(...nds.map(n => n.y + n.h))
+  const treeW = maxX - minX
+  const treeH = maxY - minY
+  const scale = clampZoomScale(Math.min(vp.clientWidth / treeW, vp.clientHeight / treeH) * 0.85)
+  gestures.zoomScale.value = scale
+  gestures.panX.value = vp.clientWidth  / 2 - (minX + treeW / 2) * scale
+  gestures.panY.value = vp.clientHeight / 2 - (minY + treeH / 2) * scale
+}
+
+function resetView() {
+  gestures.zoomScale.value = 1
+  centerTree('smooth')
+}
+
 // ─── Toggle collapse (with lazy-load) ────────────────────────────────────────
 async function toggleNode(nodeId) {
   const isCollapsed = collapsedNodeIds.value.has(nodeId)
@@ -322,6 +363,8 @@ async function toggleNode(nodeId) {
     next.add(nodeId)
     collapsedNodeIds.value = next
   }
+  await nextTick()
+  focusNode(nodeId, 'smooth')
 }
 
 // ─── Node selection ───────────────────────────────────────────────────────────

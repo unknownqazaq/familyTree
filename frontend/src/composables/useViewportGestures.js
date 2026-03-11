@@ -301,6 +301,8 @@ export function useViewportGestures({ viewportRef, isInteractionEnabled }) {
     handleViewportTouchEnd,
     // wheel
     handleViewportWheel,
+    // programmatic zoom
+    applyZoomAtPoint,
     // cleanup
     stopViewportDrag,
     stopTouchGesture,
