@@ -9,40 +9,24 @@
     :data-node-id="person.id"
     @click.stop="handleClick"
   >
-    <!-- Section 1: Avatar + name -->
+    <!-- Avatar + name -->
     <div class="node-header">
-      <span class="node-avatar" :style="{ background: avatarGradient }">{{ avatarLetter }}</span>
+      <span class="node-avatar" :style="{ background: avatarBg }">{{ avatarLetter }}</span>
       <span class="node-label">{{ person.name }}</span>
     </div>
 
-    <!-- Section 2: Action buttons, always visible, larger -->
+    <!-- Action row -->
     <div v-if="canManage || hasChildren || isLoading" class="node-actions-row">
       <template v-if="canManage">
-        <button
-          class="icon-btn add-btn"
-          :title="t('treeMap.addTitle')"
-          :aria-label="t('treeMap.addTitle')"
-          @click.stop="$emit('add')"
-        >+</button>
-        <button
-          class="icon-btn edit-btn"
-          :title="t('treeMap.editTitle')"
-          :aria-label="t('treeMap.editTitle')"
-          @click.stop="$emit('edit')"
-        >✎</button>
-        <button
-          class="icon-btn danger-btn"
-          :title="t('treeMap.deleteTitle')"
-          :aria-label="t('treeMap.deleteTitle')"
-          @click.stop="$emit('delete')"
-        >✕</button>
+        <button class="icon-btn add-btn"    :title="t('treeMap.addTitle')"    @click.stop="$emit('add')">+</button>
+        <button class="icon-btn edit-btn"   :title="t('treeMap.editTitle')"   @click.stop="$emit('edit')">✎</button>
+        <button class="icon-btn danger-btn" :title="t('treeMap.deleteTitle')" @click.stop="$emit('delete')">✕</button>
       </template>
       <button
         v-if="hasChildren || isLoading"
         class="icon-btn toggle-btn"
         :class="{ 'is-loading': isLoading }"
         :title="isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')"
-        :aria-label="isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')"
         :aria-expanded="!isCollapsed"
         :disabled="isLoading"
         @click.stop="$emit('toggle')"
@@ -52,19 +36,18 @@
       </button>
     </div>
 
-    <!-- Section 3: Content -->
+    <!-- Designation -->
     <div
       v-if="person.designation"
       class="node-designation"
       :class="{ 'is-clamped': longDesig && !expandedDesig }"
       :title="person.designation"
     >{{ person.designation }}</div>
-    <button
-      v-if="longDesig"
-      class="text-expand-btn"
-      @click.stop="expandedDesig = !expandedDesig"
-    >{{ expandedDesig ? t('common.showLess') : t('common.showMore') }}</button>
+    <button v-if="longDesig" class="text-expand-btn" @click.stop="expandedDesig = !expandedDesig">
+      {{ expandedDesig ? t('common.showLess') : t('common.showMore') }}
+    </button>
 
+    <!-- Meta -->
     <div v-if="canSeeNodeMeta" class="node-meta">
       <span>#{{ person.id }}</span>
       <div
@@ -74,20 +57,16 @@
         :title="person.reference"
       >{{ person.reference }}</div>
     </div>
-    <button
-      v-if="canSeeNodeMeta && longMeta"
-      class="text-expand-btn"
-      @click.stop="expandedMeta = !expandedMeta"
-    >{{ expandedMeta ? t('common.showLess') : t('common.showMore') }}</button>
+    <button v-if="canSeeNodeMeta && longMeta" class="text-expand-btn" @click.stop="expandedMeta = !expandedMeta">
+      {{ expandedMeta ? t('common.showLess') : t('common.showMore') }}
+    </button>
 
-    <!-- Section 4: Access badge -->
+    <!-- Access badge -->
     <span
       v-if="person.access"
       class="access-badge"
       :class="person.access === 'public' ? 'is-public' : 'is-private'"
-    >
-      {{ person.access === 'public' ? t('common.public') : t('common.private') }}
-    </span>
+    >{{ person.access === 'public' ? t('common.public') : t('common.private') }}</span>
   </div>
 </template>
 
@@ -109,29 +88,22 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['click', 'toggle', 'add', 'edit', 'delete'])
-
 const { t } = useI18n()
 
 const CLAMP_THRESHOLD = 80
-
 const expandedDesig = ref(false)
 const expandedMeta  = ref(false)
 
 const longDesig = computed(() => (props.person?.designation?.length ?? 0) > CLAMP_THRESHOLD)
 const longMeta  = computed(() => (props.person?.reference?.length ?? 0) > CLAMP_THRESHOLD)
 
-// Avatar: first letter + deterministic warm hue from person id
-const avatarLetter = computed(() => {
-  const name = props.person?.name || '?'
-  return name.charAt(0).toUpperCase()
-})
+const avatarLetter = computed(() => (props.person?.name || '?').charAt(0).toUpperCase())
 
-const avatarGradient = computed(() => {
+// Deterministic color from person id — spread across hue circle
+const avatarBg = computed(() => {
   const id  = props.person?.id ?? 0
-  const hue = ((id * 137) % 360)
-  // Keep hues in warm range with some variety
-  const warmHue = (30 + hue * 0.55) % 360
-  return `linear-gradient(135deg, hsl(${warmHue}, 55%, 48%), hsl(${(warmHue + 25) % 360}, 60%, 38%))`
+  const hue = (id * 137.508) % 360
+  return `hsl(${hue}, 60%, 52%)`
 })
 
 function handleClick() {
@@ -141,25 +113,23 @@ function handleClick() {
 </script>
 
 <style scoped>
-/* ── Avatar ────────────────────────────────────────────────────────────────── */
+/* ── Avatar ──────────────────────────────────────────────────────────────── */
 .node-avatar {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 999px;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #fff;
-  letter-spacing: -0.02em;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  font-family: var(--font-serif, Georgia, serif);
+  letter-spacing: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
-/* ── Text clamping ─────────────────────────────────────────────────────────── */
+/* ── Text clamping ───────────────────────────────────────────────────────── */
 .is-clamped {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -167,7 +137,7 @@ function handleClick() {
   overflow: hidden;
 }
 
-/* ── Reference block inside meta ───────────────────────────────────────────── */
+/* ── Description ─────────────────────────────────────────────────────────── */
 .node-description {
   margin-top: 3px;
   overflow-wrap: break-word;
@@ -176,42 +146,32 @@ function handleClick() {
   line-height: 1.35;
 }
 
-/* ── Show more / Show less button ──────────────────────────────────────────── */
+/* ── Show more ───────────────────────────────────────────────────────────── */
 .text-expand-btn {
   all: unset;
   display: inline-block;
   font-size: 11px;
-  font-weight: 600;
-  color: #0284c7;
+  font-weight: 500;
+  color: var(--c-primary, #0a84ff);
   cursor: pointer;
-  line-height: 1;
   padding: 1px 0;
   opacity: 0.85;
-  transition: opacity 0.12s ease;
+  transition: opacity 0.1s;
 }
+.text-expand-btn:hover { opacity: 1; text-decoration: underline; }
 
-.text-expand-btn:hover {
-  opacity: 1;
-  text-decoration: underline;
-}
-
-/* ── Loading spinner on toggle button ────────────────────────────────────── */
-.toggle-btn.is-loading {
-  pointer-events: none;
-  opacity: 0.7;
-}
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+.toggle-btn.is-loading { pointer-events: none; opacity: 0.6; }
 
 .node-spinner {
   display: inline-block;
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(30, 41, 59, 0.2);
-  border-top-color: #1e293b;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-top-color: rgba(255, 255, 255, 0.7);
   border-radius: 50%;
-  animation: node-spin 0.6s linear infinite;
+  animation: node-spin 0.65s linear infinite;
 }
 
-@keyframes node-spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes node-spin { to { transform: rotate(360deg); } }
 </style>

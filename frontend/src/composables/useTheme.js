@@ -1,10 +1,10 @@
 import { ref, watch } from 'vue'
 import { safeGetItem, safeSetItem } from '../utils/storage'
 
-// Singleton reactive state shared across all component instances
+// Default: dark (Apple style)
+const saved = safeGetItem('theme')
 const dark = ref(
-  safeGetItem('theme') === 'dark' ||
-  (!safeGetItem('theme') && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  saved ? saved === 'dark' : true // dark by default
 )
 
 function applyTheme(isDark) {
@@ -13,7 +13,6 @@ function applyTheme(isDark) {
   }
 }
 
-// Apply immediately on module load
 applyTheme(dark.value)
 
 watch(dark, (isDark) => {

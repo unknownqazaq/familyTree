@@ -17,91 +17,110 @@ import { useTheme } from './composables/useTheme'
 import NavBar from './components/NavBar.vue'
 import AppFooter from './components/AppFooter.vue'
 
-// Initialize theme on app load (applies data-theme to <html>)
 useTheme()
 </script>
 
 <style>
-/* ── Design tokens ─────────────────────────────────────────────────────────── */
-:root {
-  /* Fonts */
-  --font-sans:   'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-serif:  Georgia, 'Times New Roman', 'Playfair Display', serif;
-
-  /* Brand — warm amber */
-  --c-primary:        #d97706;
-  --c-primary-dark:   #b45309;
-  --c-primary-light:  #fde68a;
-  --c-primary-glow:   rgba(217, 119, 6, 0.22);
-
-  /* Semantic */
-  --c-danger:         #ef4444;
-  --c-danger-dark:    #dc2626;
-  --c-success:        #10b981;
-  --c-success-dark:   #059669;
-
-  /* Backgrounds */
-  --c-bg-1:           #fefce8;
-  --c-bg-2:           #fff7ed;
-  --c-bg-radial-1:    rgba(217, 119, 6, 0.12);
-  --c-bg-radial-2:    rgba(194, 65, 12, 0.09);
-
-  /* Surface */
-  --c-surface:        rgba(255, 253, 245, 0.92);
-  --c-surface-solid:  #fffdf5;
-  --c-border:         rgba(231, 219, 200, 0.85);
-  --c-shadow:         rgba(28, 25, 23, 0.08);
-
-  /* Text */
-  --c-text:           #1c1917;
-  --c-muted:          #78716c;
-
-  /* Inputs */
-  --c-input-bg:       #faf7f0;
-  --c-input-border:   #e7ddd0;
-  --c-input-focus:    #d97706;
-  --c-input-shadow:   rgba(217, 119, 6, 0.18);
-
-  /* Secondary button */
-  --c-secondary-bg:   #f5f0e8;
-  --c-secondary-text: #44403c;
-  --c-secondary-border: #e7ddd0;
-}
-
-/* ── Dark mode tokens ──────────────────────────────────────────────────────── */
+/* ── Apple Design Tokens — Dark (default) ────────────────────────────────── */
+:root,
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --c-primary:        #f59e0b;
-  --c-primary-dark:   #d97706;
-  --c-primary-light:  #78350f;
-  --c-primary-glow:   rgba(245, 158, 11, 0.20);
+  /* System font — SF Pro on Apple devices */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+               'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', Consolas, monospace;
 
-  --c-bg-1:           #1c1917;
-  --c-bg-2:           #0c0a09;
-  --c-bg-radial-1:    rgba(245, 158, 11, 0.07);
-  --c-bg-radial-2:    rgba(217, 119, 6, 0.05);
+  /* Backgrounds — layered depth */
+  --c-bg:          #000000;
+  --c-bg-2:        #1c1c1e;
+  --c-bg-3:        #2c2c2e;
+  --c-bg-4:        #3a3a3c;
 
-  --c-surface:        rgba(41, 37, 36, 0.95);
-  --c-surface-solid:  #292524;
-  --c-border:         rgba(87, 83, 78, 0.75);
-  --c-shadow:         rgba(0, 0, 0, 0.35);
+  /* Labels */
+  --c-text:        #ffffff;
+  --c-text-2:      rgba(235, 235, 245, 0.60);
+  --c-text-3:      rgba(235, 235, 245, 0.30);
+  --c-text-4:      rgba(235, 235, 245, 0.18);
 
-  --c-text:           #fef3c7;
-  --c-muted:          #a8a29e;
+  /* Fills */
+  --c-fill:        rgba(120, 120, 128, 0.36);
+  --c-fill-2:      rgba(120, 120, 128, 0.28);
+  --c-fill-3:      rgba(118, 118, 128, 0.20);
 
-  --c-input-bg:       #292524;
-  --c-input-border:   #57534e;
-  --c-input-focus:    #f59e0b;
-  --c-input-shadow:   rgba(245, 158, 11, 0.18);
+  /* Separator */
+  --c-sep:         rgba(84, 84, 88, 0.65);
+  --c-sep-opaque:  #38383a;
 
-  --c-secondary-bg:   #3c3837;
-  --c-secondary-text: #d6d3d1;
-  --c-secondary-border: #57534e;
+  /* Accent — Apple Blue dark */
+  --c-primary:     #0a84ff;
+  --c-primary-d:   #0070e0;
+  --c-primary-glow: rgba(10, 132, 255, 0.25);
+
+  /* System colors */
+  --c-red:         #ff453a;
+  --c-green:       #32d74b;
+  --c-yellow:      #ffd60a;
+  --c-orange:      #ff9f0a;
+
+  /* Surface / glass */
+  --c-surface:     rgba(28, 28, 30, 0.80);
+  --c-surface-2:   rgba(44, 44, 46, 0.85);
+  --c-border:      rgba(255, 255, 255, 0.09);
+  --c-border-2:    rgba(255, 255, 255, 0.05);
+  --c-shadow:      rgba(0, 0, 0, 0.55);
+
+  /* Inputs */
+  --c-input-bg:    rgba(118, 118, 128, 0.18);
+  --c-input-border: rgba(84, 84, 88, 0.55);
+  --c-input-focus: #0a84ff;
+  --c-input-shadow: rgba(10, 132, 255, 0.22);
 }
 
-/* ── Global reset & base ───────────────────────────────────────────────────── */
-* {
+/* ── Apple Design Tokens — Light ─────────────────────────────────────────── */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --c-bg:          #f2f2f7;
+  --c-bg-2:        #ffffff;
+  --c-bg-3:        #f2f2f7;
+  --c-bg-4:        #e5e5ea;
+
+  --c-text:        #000000;
+  --c-text-2:      rgba(60, 60, 67, 0.60);
+  --c-text-3:      rgba(60, 60, 67, 0.30);
+  --c-text-4:      rgba(60, 60, 67, 0.18);
+
+  --c-fill:        rgba(120, 120, 128, 0.20);
+  --c-fill-2:      rgba(120, 120, 128, 0.14);
+  --c-fill-3:      rgba(118, 118, 128, 0.10);
+
+  --c-sep:         rgba(60, 60, 67, 0.29);
+  --c-sep-opaque:  #c6c6c8;
+
+  --c-primary:     #007aff;
+  --c-primary-d:   #0062cc;
+  --c-primary-glow: rgba(0, 122, 255, 0.20);
+
+  --c-red:         #ff3b30;
+  --c-green:       #34c759;
+  --c-yellow:      #ffcc00;
+  --c-orange:      #ff9500;
+
+  --c-surface:     rgba(255, 255, 255, 0.82);
+  --c-surface-2:   rgba(242, 242, 247, 0.88);
+  --c-border:      rgba(60, 60, 67, 0.14);
+  --c-border-2:    rgba(60, 60, 67, 0.08);
+  --c-shadow:      rgba(0, 0, 0, 0.08);
+
+  --c-input-bg:    rgba(118, 118, 128, 0.10);
+  --c-input-border: rgba(60, 60, 67, 0.22);
+  --c-input-focus: #007aff;
+  --c-input-shadow: rgba(0, 122, 255, 0.18);
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -109,28 +128,26 @@ useTheme()
 
 :root {
   font-family: var(--font-sans);
+  font-size: 16px;
   line-height: 1.5;
-  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   font-family: var(--font-sans);
+  background: var(--c-bg);
   color: var(--c-text);
-  background:
-    radial-gradient(circle at top right, var(--c-bg-radial-1), transparent 42%),
-    radial-gradient(circle at top left,  var(--c-bg-radial-2), transparent 35%),
-    linear-gradient(180deg, var(--c-bg-1) 0%, var(--c-bg-2) 100%);
   min-height: 100vh;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-/* ── Typography: serif for headings ───────────────────────────────────────── */
-h1, h2, h3, h4 {
-  font-family: var(--font-serif);
-  color: var(--c-text);
-}
-
-/* ── Layout ────────────────────────────────────────────────────────────────── */
+/* ── Layout ──────────────────────────────────────────────────────────────── */
 #app, .app-layout {
   min-height: 100vh;
   display: flex;
@@ -139,130 +156,138 @@ h1, h2, h3, h4 {
 
 .main-content {
   flex: 1;
-  padding: 32px 24px 40px;
+  padding: 32px 24px 48px;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
 }
 
-/* ── Links ─────────────────────────────────────────────────────────────────── */
+/* ── Typography ──────────────────────────────────────────────────────────── */
+h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.022em; line-height: 1.12; }
+h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.018em; line-height: 1.16; }
+h3 { font-size: 22px; font-weight: 600; letter-spacing: -0.012em; }
+h4 { font-size: 17px; font-weight: 600; letter-spacing: -0.008em; }
+
+h1, h2, h3, h4 { color: var(--c-text); }
+
+/* ── Links ───────────────────────────────────────────────────────────────── */
 a {
   color: var(--c-primary);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: opacity 0.15s ease;
 }
+a:hover { opacity: 0.75; }
 
-a:hover { color: var(--c-primary-dark); }
-
-/* ── Buttons ───────────────────────────────────────────────────────────────── */
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
 button {
   cursor: pointer;
-  padding: 10px 16px;
+  padding: 10px 18px;
   border: none;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   font-family: var(--font-sans);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s;
+  letter-spacing: -0.01em;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
-
-button:hover  { transform: translateY(-1px); }
-button:active { transform: translateY(0); }
+button:hover  { opacity: 0.88; transform: none; }
+button:active { opacity: 0.70; transform: scale(0.98); }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-dark) 100%);
+  background: var(--c-primary);
   color: #fff;
-  box-shadow: 0 8px 20px var(--c-primary-glow);
+  box-shadow: 0 0 0 0 var(--c-primary-glow);
+  transition: background 0.15s, box-shadow 0.2s, opacity 0.15s;
 }
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--c-primary-dark) 0%, #92400e 100%);
+  background: var(--c-primary-d);
+  box-shadow: 0 4px 20px var(--c-primary-glow);
+  opacity: 1;
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, var(--c-danger) 0%, var(--c-danger-dark) 100%);
+  background: var(--c-red);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.28);
-}
-.btn-danger:hover {
-  background: linear-gradient(135deg, var(--c-danger-dark) 0%, #b91c1c 100%);
 }
 
 .btn-success {
-  background: linear-gradient(135deg, var(--c-success) 0%, var(--c-success-dark) 100%);
+  background: var(--c-green);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.28);
-}
-.btn-success:hover {
-  background: linear-gradient(135deg, var(--c-success-dark) 0%, #047857 100%);
 }
 
 .btn-secondary {
-  background: var(--c-secondary-bg);
-  color: var(--c-secondary-text);
-  border: 1px solid var(--c-secondary-border);
-  box-shadow: 0 3px 8px var(--c-shadow);
+  background: var(--c-fill);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
 }
-.btn-secondary:hover { background: var(--c-input-border); }
+.btn-secondary:hover {
+  background: var(--c-fill-2);
+  opacity: 1;
+}
 
-/* ── Form elements ─────────────────────────────────────────────────────────── */
+/* ── Form elements ───────────────────────────────────────────────────────── */
 input, textarea, select {
-  padding: 10px 12px;
+  padding: 10px 14px;
   border: 1px solid var(--c-input-border);
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 15px;
   font-family: var(--font-sans);
   width: 100%;
   background: var(--c-input-bg);
   color: var(--c-text);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  -webkit-font-smoothing: antialiased;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--c-text-3);
 }
 
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--c-input-focus);
-  background: var(--c-surface-solid);
-  box-shadow: 0 0 0 4px var(--c-input-shadow);
+  background: var(--c-surface);
+  box-shadow: 0 0 0 3px var(--c-input-shadow);
 }
 
-/* ── Card ──────────────────────────────────────────────────────────────────── */
+/* ── Card ────────────────────────────────────────────────────────────────── */
 .card {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: 18px;
   padding: 24px;
-  box-shadow: 0 16px 38px var(--c-shadow);
-  backdrop-filter: blur(7px);
+  box-shadow: 0 8px 32px var(--c-shadow);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   margin-bottom: 16px;
 }
 
-/* ── Messages ──────────────────────────────────────────────────────────────── */
-.error-msg   { color: var(--c-danger);  font-size: 13px; margin-top: 4px; }
-.success-msg { color: var(--c-success); font-size: 13px; margin-top: 4px; }
+/* ── Messages ────────────────────────────────────────────────────────────── */
+.error-msg   { color: var(--c-red);   font-size: 13px; margin-top: 4px; }
+.success-msg { color: var(--c-green); font-size: 13px; margin-top: 4px; }
 
-/* ── Page transition ───────────────────────────────────────────────────────── */
+/* ── Page transition ─────────────────────────────────────────────────────── */
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 .page-enter-from,
 .page-leave-to {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(8px);
 }
 
-/* ── Responsive ────────────────────────────────────────────────────────────── */
-@media (max-width: 1024px) {
-  .main-content { padding: 24px 16px 32px; }
-}
+/* ── Scrollbar (dark themed) ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-fill); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-fill-2); }
 
-@media (max-width: 768px) {
-  .main-content { padding: 18px 12px 24px; }
-  .card { border-radius: 16px; padding: 18px; margin-bottom: 12px; }
-}
-
-@media (max-width: 480px) {
-  .main-content { padding: 14px 10px 20px; }
-  button { padding: 9px 12px; font-size: 13px; }
-  .card  { border-radius: 14px; padding: 14px; }
-}
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) { .main-content { padding: 24px 16px 40px; } }
+@media (max-width: 768px)  { .main-content { padding: 20px 14px 32px; }
+  .card { border-radius: 16px; padding: 18px; } }
+@media (max-width: 480px)  { .main-content { padding: 16px 12px 24px; }
+  button { padding: 9px 14px; font-size: 14px; }
+  .card  { border-radius: 14px; padding: 14px; } }
 </style>
