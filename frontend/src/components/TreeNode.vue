@@ -55,7 +55,7 @@
     >{{ person.designation }}</div>
     <button
       v-if="longDesig"
-      class="node-expand-btn"
+      class="text-expand-btn"
       @click.stop="expandedDesig = !expandedDesig"
     >{{ expandedDesig ? t('common.showLess') : t('common.showMore') }}</button>
 
@@ -63,14 +63,14 @@
       <span>#{{ person.id }}</span>
       <div
         v-if="person.reference"
-        class="meta-reference"
+        class="node-description"
         :class="{ 'is-clamped': longMeta && !expandedMeta }"
         :title="person.reference"
       >{{ person.reference }}</div>
     </div>
     <button
       v-if="canSeeNodeMeta && longMeta"
-      class="node-expand-btn"
+      class="text-expand-btn"
       @click.stop="expandedMeta = !expandedMeta"
     >{{ expandedMeta ? t('common.showLess') : t('common.showMore') }}</button>
 
@@ -129,7 +129,7 @@ function handleClick() {
 }
 
 /* ── Reference block inside meta ───────────────────────────────────────────── */
-.meta-reference {
+.node-description {
   margin-top: 3px;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -138,7 +138,7 @@ function handleClick() {
 }
 
 /* ── Show more / Show less button ──────────────────────────────────────────── */
-.node-expand-btn {
+.text-expand-btn {
   all: unset;
   display: inline-block;
   font-size: 11px;
@@ -151,7 +151,7 @@ function handleClick() {
   transition: opacity 0.12s ease;
 }
 
-.node-expand-btn:hover {
+.text-expand-btn:hover {
   opacity: 1;
   text-decoration: underline;
 }
