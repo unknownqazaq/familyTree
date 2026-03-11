@@ -69,7 +69,7 @@ const form = reactive({
   designation: '',
   reference: '',
   history: '',
-  access: 'private',
+  access: 'public',
 })
 
 const selectedParent = ref(null)
@@ -83,7 +83,7 @@ watch(
       form.designation = data.designation || ''
       form.reference = data.reference || ''
       form.history = data.history || ''
-      form.access = data.access || 'private'
+      form.access = data.access || 'public'
     }
   },
   { immediate: true }
