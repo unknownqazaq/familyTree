@@ -2,7 +2,7 @@
   <div ref="treeViewRef" class="tree-view card" :class="{ 'is-fullscreen': isFullscreen }">
     <div class="tree-header">
       <div class="header-copy">
-        <h3>{{ t('treeMap.title') }}</h3>
+        <h2>{{ t('treeMap.title') }}</h2>
         <p>{{ t('treeMap.hint') }}</p>
       </div>
       <div class="header-controls">
@@ -12,7 +12,7 @@
         <button type="button" class="btn-secondary control-btn" @click="toggleFullscreen">
           {{ isFullscreen ? t('treeMap.fullscreenExit') : t('treeMap.fullscreenEnter') }}
         </button>
-        <span class="stats-pill">{{ t('treeMap.nodesCount', { count: persons.length }) }}</span>
+        <span class="stats-pill" aria-live="polite" aria-atomic="true">{{ t('treeMap.nodesCount', { count: persons.length }) }}</span>
       </div>
     </div>
 
@@ -649,7 +649,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 
 .tree-viewport {
   position: relative;
-  height: 560px;
+  height: clamp(340px, 60vh, 800px);
   overflow: hidden;
   cursor: grab;
   touch-action: none;
@@ -827,7 +827,8 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   transition: opacity 0.15s ease;
 }
 
-.tree-node:hover .node-actions-hover {
+.tree-node:hover .node-actions-hover,
+.tree-node:focus-within .node-actions-hover {
   opacity: 1;
   pointer-events: all;
 }

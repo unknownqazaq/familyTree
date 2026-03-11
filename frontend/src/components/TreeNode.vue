@@ -20,16 +20,19 @@
           <button
             class="icon-btn add-btn"
             :title="t('treeMap.addTitle')"
+            :aria-label="t('treeMap.addTitle')"
             @click.stop="$emit('add')"
           >+</button>
           <button
             class="icon-btn edit-btn"
             :title="t('treeMap.editTitle')"
+            :aria-label="t('treeMap.editTitle')"
             @click.stop="$emit('edit')"
           >✎</button>
           <button
             class="icon-btn danger-btn"
             :title="t('treeMap.deleteTitle')"
+            :aria-label="t('treeMap.deleteTitle')"
             @click.stop="$emit('delete')"
           >✕</button>
         </div>
@@ -38,6 +41,8 @@
           class="icon-btn toggle-btn"
           :class="{ 'is-loading': isLoading }"
           :title="isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')"
+          :aria-label="isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')"
+          :aria-expanded="!isCollapsed"
           :disabled="isLoading"
           @click.stop="$emit('toggle')"
         >

@@ -1,4 +1,4 @@
-import { createApp } from 'vue'
+import { createApp, watch } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
@@ -11,3 +11,9 @@ app.use(router)
 app.use(i18n)
 
 app.mount('#app')
+
+// Sync <html lang> with the active locale
+document.documentElement.lang = i18n.global.locale.value
+watch(i18n.global.locale, (locale) => {
+  document.documentElement.lang = locale
+})

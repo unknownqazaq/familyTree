@@ -1,6 +1,6 @@
 <template>
   <div class="search-bar">
-    <input v-model="query" type="text" :placeholder="placeholderText" @input="onSearch" />
+    <input v-model="query" type="text" :placeholder="placeholderText" :aria-label="placeholderText" autocomplete="off" @input="onSearch" />
     <div v-if="results.length > 0" class="search-results">
       <div
         v-for="person in results"

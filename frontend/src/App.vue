@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div class="app-layout">
     <NavBar />
     <main class="main-content">
       <router-view />
@@ -34,7 +34,7 @@ body {
   color: #0f172a;
 }
 
-#app {
+#app, .app-layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;

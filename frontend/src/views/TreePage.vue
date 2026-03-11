@@ -17,14 +17,14 @@
           <SearchBar :placeholder="t('search.personsPlaceholder')" @select="onSearchSelect" />
         </div>
 
-        <div class="path-finder">
+        <form class="path-finder" @submit.prevent="findPath">
           <SearchBar :placeholder="t('search.fromPlaceholder')" @select="onFromSelect" />
           <SearchBar :placeholder="t('search.toPlaceholder')" @select="onToSelect" />
-          <button class="btn-primary" @click="findPath">
+          <button type="submit" class="btn-primary">
             {{ t('tree.findPath') }}
           </button>
-          <p v-if="pathError" class="error-msg path-error">{{ pathError }}</p>
-        </div>
+          <p v-if="pathError" class="error-msg path-error" role="alert">{{ pathError }}</p>
+        </form>
       </div>
     </div>
 
