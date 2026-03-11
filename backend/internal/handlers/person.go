@@ -39,11 +39,14 @@ func (h *PersonHandler) GetPerson(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
 			return
 		}
-		canAccess, _ := h.personRepo.CanAccess(person.ID, uid)
 		role, _ := c.Get("role")
-		if !canAccess && role != "admin" && role != "staff" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
-			return
+		isRecordOwner := person.CreatedBy != nil && *person.CreatedBy == uid
+		if !isRecordOwner && role != "admin" && role != "staff" {
+			canAccess, _ := h.personRepo.CanAccess(person.ID, uid)
+			if !canAccess {
+				c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+				return
+			}
 		}
 	}
 
