@@ -5,23 +5,25 @@
 
       <form @submit.prevent="handleRegister">
         <div class="form-group">
-          <label>{{ t('auth.firstNameLabel') }} *</label>
-          <input v-model="firstName" type="text" required :placeholder="t('auth.firstNamePlaceholder')" />
+          <label for="reg-first-name">{{ t('auth.firstNameLabel') }} *</label>
+          <input id="reg-first-name" name="first_name" v-model="firstName" type="text" required :placeholder="t('auth.firstNamePlaceholder')" />
         </div>
 
         <div class="form-group">
-          <label>{{ t('auth.lastNameLabel') }} *</label>
-          <input v-model="lastName" type="text" required :placeholder="t('auth.lastNamePlaceholder')" />
+          <label for="reg-last-name">{{ t('auth.lastNameLabel') }} *</label>
+          <input id="reg-last-name" name="last_name" v-model="lastName" type="text" required :placeholder="t('auth.lastNamePlaceholder')" />
         </div>
 
         <div class="form-group">
-          <label>{{ t('auth.emailLabel') }} *</label>
-          <input v-model="email" type="email" required :placeholder="t('auth.emailPlaceholder')" />
+          <label for="reg-email">{{ t('auth.emailLabel') }} *</label>
+          <input id="reg-email" name="email" v-model="email" type="email" required :placeholder="t('auth.emailPlaceholder')" />
         </div>
 
         <div class="form-group">
-          <label>{{ t('auth.passwordLabel') }} *</label>
+          <label for="reg-password">{{ t('auth.passwordLabel') }} *</label>
           <input
+            id="reg-password"
+            name="password"
             v-model="password"
             type="password"
             required
@@ -31,8 +33,8 @@
         </div>
 
         <div class="form-group">
-          <label>{{ t('auth.confirmPasswordLabel') }} *</label>
-          <input v-model="confirmPassword" type="password" required :placeholder="t('auth.confirmPasswordPlaceholder')" />
+          <label for="reg-confirm-password">{{ t('auth.confirmPasswordLabel') }} *</label>
+          <input id="reg-confirm-password" name="confirm_password" v-model="confirmPassword" type="password" required :placeholder="t('auth.confirmPasswordPlaceholder')" />
         </div>
 
         <p v-if="error" class="error-msg">{{ error }}</p>

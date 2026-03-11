@@ -5,13 +5,13 @@
 
       <form @submit.prevent="handleLogin">
         <div class="form-group">
-          <label>{{ t('auth.emailLabel') }}</label>
-          <input v-model="email" type="email" required :placeholder="t('auth.emailPlaceholder')" />
+          <label for="login-email">{{ t('auth.emailLabel') }}</label>
+          <input id="login-email" name="email" v-model="email" type="email" required :placeholder="t('auth.emailPlaceholder')" />
         </div>
 
         <div class="form-group">
-          <label>{{ t('auth.passwordLabel') }}</label>
-          <input v-model="password" type="password" required :placeholder="t('auth.passwordPlaceholder')" />
+          <label for="login-password">{{ t('auth.passwordLabel') }}</label>
+          <input id="login-password" name="password" v-model="password" type="password" required :placeholder="t('auth.passwordPlaceholder')" />
         </div>
 
         <p v-if="error" class="error-msg">{{ error }}</p>

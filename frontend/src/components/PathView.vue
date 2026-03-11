@@ -3,9 +3,9 @@
     <h3>{{ t('path.title') }}</h3>
     <div class="path-chain">
       <template v-for="(node, index) in path" :key="node.id">
-        <div class="path-node" @click="$emit('node-click', node.id)">
+        <button type="button" class="path-node" @click="$emit('node-click', node.id)">
           {{ node.name }}
-        </div>
+        </button>
         <div v-if="index < path.length - 1" class="path-arrow">&rarr;</div>
       </template>
     </div>

@@ -1,12 +1,12 @@
 <template>
   <form class="person-form" @submit.prevent="onSubmit">
     <div class="form-group">
-      <label>{{ t('person.nameLabel') }}</label>
-      <input v-model="form.name" type="text" required :placeholder="t('person.namePlaceholder')" />
+      <label for="person-name">{{ t('person.nameLabel') }}</label>
+      <input id="person-name" name="name" v-model="form.name" type="text" required :placeholder="t('person.namePlaceholder')" />
     </div>
 
     <div class="form-group">
-      <label>{{ t('person.parentLabel') }}</label>
+      <label for="person-parent">{{ t('person.parentLabel') }}</label>
       <SearchBar :placeholder="t('search.parentPlaceholder')" @select="onParentSelect" />
       <div v-if="selectedParent" class="selected-parent">
         {{ t('person.selected') }} {{ selectedParent.name }}
@@ -15,23 +15,23 @@
     </div>
 
     <div class="form-group">
-      <label>{{ t('person.designationLabel') }}</label>
-      <input v-model="form.designation" type="text" :placeholder="t('person.designationPlaceholder')" />
+      <label for="person-designation">{{ t('person.designationLabel') }}</label>
+      <input id="person-designation" name="designation" v-model="form.designation" type="text" :placeholder="t('person.designationPlaceholder')" />
     </div>
 
     <div class="form-group">
-      <label>{{ t('person.referenceLabel') }}</label>
-      <textarea v-model="form.reference" rows="2" :placeholder="t('person.referencePlaceholder')"></textarea>
+      <label for="person-reference">{{ t('person.referenceLabel') }}</label>
+      <textarea id="person-reference" name="reference" v-model="form.reference" rows="2" :placeholder="t('person.referencePlaceholder')"></textarea>
     </div>
 
     <div class="form-group">
-      <label>{{ t('person.historyLabel') }}</label>
-      <textarea v-model="form.history" rows="4" :placeholder="t('person.historyPlaceholder')"></textarea>
+      <label for="person-history">{{ t('person.historyLabel') }}</label>
+      <textarea id="person-history" name="history" v-model="form.history" rows="4" :placeholder="t('person.historyPlaceholder')"></textarea>
     </div>
 
     <div class="form-group">
-      <label>{{ t('person.accessLabel') }}</label>
-      <select v-model="form.access">
+      <label for="person-access">{{ t('person.accessLabel') }}</label>
+      <select id="person-access" name="access" v-model="form.access">
         <option value="private">{{ t('common.private') }}</option>
         <option value="public">{{ t('common.public') }}</option>
       </select>

@@ -4,6 +4,7 @@
     :class="{
       'root-node':     depth === 0,
       'selected-node': isSelected,
+      'on-path-node':  isOnPath,
     }"
     :data-node-id="person.id"
     @click.stop="handleClick"
@@ -14,25 +15,24 @@
         <span class="node-label" :title="person.name">{{ person.name }}</span>
       </div>
 
-      <div class="node-actions">
-        <button
-          v-if="canManage"
-          class="icon-btn add-btn"
-          :title="t('treeMap.addTitle')"
-          @click.stop="$emit('add')"
-        >+</button>
-        <button
-          v-if="canManage"
-          class="icon-btn edit-btn"
-          :title="t('treeMap.editTitle')"
-          @click.stop="$emit('edit')"
-        >✎</button>
-        <button
-          v-if="canManage"
-          class="icon-btn danger-btn"
-          :title="t('treeMap.deleteTitle')"
-          @click.stop="$emit('delete')"
-        >✕</button>
+      <div class="node-actions-wrap">
+        <div v-if="canManage" class="node-actions-hover">
+          <button
+            class="icon-btn add-btn"
+            :title="t('treeMap.addTitle')"
+            @click.stop="$emit('add')"
+          >+</button>
+          <button
+            class="icon-btn edit-btn"
+            :title="t('treeMap.editTitle')"
+            @click.stop="$emit('edit')"
+          >✎</button>
+          <button
+            class="icon-btn danger-btn"
+            :title="t('treeMap.deleteTitle')"
+            @click.stop="$emit('delete')"
+          >✕</button>
+        </div>
         <button
           v-if="hasChildren || isLoading"
           class="icon-btn toggle-btn"
@@ -91,6 +91,7 @@ import { useI18n } from 'vue-i18n'
 const props = defineProps({
   person:              { type: Object,  required: true },
   isSelected:          { type: Boolean, default: false },
+  isOnPath:            { type: Boolean, default: false },
   isCollapsed:         { type: Boolean, default: false },
   isLoading:           { type: Boolean, default: false },
   hasChildren:         { type: Boolean, default: false },

@@ -44,7 +44,7 @@
     </div>
 
     <div class="tree-graph fade-up" v-if="treeStore.persons.length > 0">
-      <TreeView ref="treeViewRef" :persons="treeStore.persons" @node-click="onNodeClick" />
+      <TreeView ref="treeViewRef" :persons="treeStore.persons" :pathNodeIds="pathNodeIds" @node-click="onNodeClick" />
     </div>
 
     <div v-if="!treeStore.loading && treeStore.persons.length === 0" class="empty-state card fade-up">
@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTreeStore } from '../stores/tree'
@@ -78,6 +78,14 @@ const pathTo = ref(null)
 const pathError = ref('')
 const treeViewRef = ref(null)
 const { t } = useI18n()
+
+const pathNodeIds = computed(() => {
+  const ids = new Set()
+  if (treeStore.pathResult && Array.isArray(treeStore.pathResult)) {
+    treeStore.pathResult.forEach((node) => ids.add(node.id))
+  }
+  return ids
+})
 
 onMounted(async () => {
   await treeStore.fetchFullTree()
@@ -104,7 +112,8 @@ function onSearchSelect(person) {
   selectedPerson.value = person
   // Pan / expand to node instead of navigating away
   treeViewRef.value?.expandToNode(person.id)
-  router.push(`/tree/${person.id}`)
+  // Update URL without triggering full navigation
+  router.replace({ name: 'tree-person', params: { id: person.id } })
 }
 
 function onFromSelect(person) {
@@ -127,9 +136,16 @@ async function findPath() {
 }
 
 function navigateToTree(nodeId) {
-  router.push(`/tree/${nodeId}`)
+  // Scroll to node in mind map instead of navigating away
+  treeViewRef.value?.expandToNode(nodeId)
   onNodeClick(nodeId)
+  router.replace({ name: 'tree-person', params: { id: nodeId } })
 }
+
+onUnmounted(() => {
+  // Clear path result when leaving tree page
+  treeStore.pathResult = null
+})
 </script>
 
 <style scoped>

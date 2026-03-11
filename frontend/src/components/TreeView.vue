@@ -18,7 +18,7 @@
 
     <div ref="viewportRef" class="tree-viewport" :class="{ 'is-dragging': gestures.isDragging.value }">
       <div ref="sceneRef" class="tree-scene" :style="sceneStyle">
-        <svg class="tree-lines" :style="svgStyle">
+        <svg class="tree-lines" :style="svgStyle" :viewBox="`0 0 ${sceneBounds.width} ${sceneBounds.height}`">
           <path
             v-for="edge in layoutEdges"
             :key="edge.id"
@@ -46,6 +46,7 @@
             }"
             :person="node.person"
             :isSelected="node.id === selectedNodeId"
+            :isOnPath="props.pathNodeIds.has(node.id)"
             :isCollapsed="node.isCollapsed"
             :isLoading="treeStore.isNodeLoading(node.id)"
             :hasChildren="node.hasChildren"
@@ -70,43 +71,43 @@
         <h4 v-else>{{ t('treeMap.deleteTitle') }}</h4>
 
         <form v-if="modalState === 'add' || modalState === 'edit'" class="modal-form" @submit.prevent="submitPersonForm">
-          <label class="form-label">
-            <span>{{ t('treeMap.nameLabel') }}</span>
-            <input v-model="formState.name" type="text" required />
-          </label>
+          <div class="form-label">
+            <label for="modal-name">{{ t('treeMap.nameLabel') }}</label>
+            <input id="modal-name" name="name" v-model="formState.name" type="text" required />
+          </div>
 
-          <label class="form-label">
-            <span>{{ t('treeMap.parentLabel') }}</span>
-            <select v-model="formState.parent_id">
+          <div class="form-label">
+            <label for="modal-parent">{{ t('treeMap.parentLabel') }}</label>
+            <select id="modal-parent" name="parent_id" v-model="formState.parent_id">
               <option value="">{{ t('treeMap.rootOption') }}</option>
               <option v-for="person in parentOptions" :key="person.id" :value="String(person.id)">
                 {{ person.name }}
               </option>
             </select>
-          </label>
+          </div>
 
-          <label class="form-label">
-            <span>{{ t('treeMap.designationLabel') }}</span>
-            <input v-model="formState.designation" type="text" />
-          </label>
+          <div class="form-label">
+            <label for="modal-designation">{{ t('treeMap.designationLabel') }}</label>
+            <input id="modal-designation" name="designation" v-model="formState.designation" type="text" />
+          </div>
 
-          <label class="form-label">
-            <span>{{ t('treeMap.referenceLabel') }}</span>
-            <textarea v-model="formState.reference" rows="2"></textarea>
-          </label>
+          <div class="form-label">
+            <label for="modal-reference">{{ t('treeMap.referenceLabel') }}</label>
+            <textarea id="modal-reference" name="reference" v-model="formState.reference" rows="2"></textarea>
+          </div>
 
-          <label class="form-label">
-            <span>{{ t('treeMap.historyLabel') }}</span>
-            <textarea v-model="formState.history" rows="4"></textarea>
-          </label>
+          <div class="form-label">
+            <label for="modal-history">{{ t('treeMap.historyLabel') }}</label>
+            <textarea id="modal-history" name="history" v-model="formState.history" rows="4"></textarea>
+          </div>
 
-          <label class="form-label">
-            <span>{{ t('treeMap.accessLabel') }}</span>
-            <select v-model="formState.access">
+          <div class="form-label">
+            <label for="modal-access">{{ t('treeMap.accessLabel') }}</label>
+            <select id="modal-access" name="access" v-model="formState.access">
               <option value="private">{{ t('common.private') }}</option>
               <option value="public">{{ t('common.public') }}</option>
             </select>
-          </label>
+          </div>
 
           <div class="modal-actions">
             <button type="submit" class="btn-primary" :disabled="mutationLoading">
@@ -158,7 +159,10 @@ import {
 } from '../utils/treeUtils.js'
 import TreeNode from './TreeNode.vue'
 
-const props = defineProps({ persons: { type: Array, default: () => [] } })
+const props = defineProps({
+  persons: { type: Array, default: () => [] },
+  pathNodeIds: { type: Set, default: () => new Set() },
+})
 const emit  = defineEmits(['node-click'])
 
 const treeStore  = useTreeStore()
@@ -763,12 +767,40 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   flex: 1 1 auto;
 }
 
-.node-actions {
+.node-actions-wrap {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  flex-shrink: 0;   /* never compress — stays pinned to the right */
+  flex-shrink: 0;
   align-self: flex-start;
+}
+
+.node-actions-hover {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.tree-node:hover .node-actions-hover {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Path highlighting ──────────────────────────────────────────────── */
+.on-path-node {
+  outline: 2.5px solid #f59e0b;
+  outline-offset: 2px;
+  animation: path-glow 1.8s ease infinite;
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25), 0 10px 26px rgba(15, 23, 42, 0.14);
+}
+
+@keyframes path-glow {
+  0%, 100% { outline-color: rgba(245, 158, 11, 0.5); }
+  50%       { outline-color: rgba(245, 158, 11, 0.9); }
 }
 
 .icon-btn {
@@ -891,7 +923,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   gap: 6px;
 }
 
-.form-label span {
+.form-label label {
   color: #334155;
   font-size: 13px;
   font-weight: 600;

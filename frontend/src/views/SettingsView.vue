@@ -6,34 +6,34 @@
       <form @submit.prevent="handleUpdate">
         <div class="form-row">
           <div class="form-group">
-            <label>{{ t('settings.firstName') }}</label>
-            <input v-model="form.first_name" type="text" />
+            <label for="settings-first-name">{{ t('settings.firstName') }}</label>
+            <input id="settings-first-name" name="first_name" v-model="form.first_name" type="text" />
           </div>
           <div class="form-group">
-            <label>{{ t('settings.lastName') }}</label>
-            <input v-model="form.last_name" type="text" />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>{{ t('settings.fatherName') }}</label>
-            <input v-model="form.father_name" type="text" />
-          </div>
-          <div class="form-group">
-            <label>{{ t('settings.grandfatherName') }}</label>
-            <input v-model="form.grandfather_name" type="text" />
+            <label for="settings-last-name">{{ t('settings.lastName') }}</label>
+            <input id="settings-last-name" name="last_name" v-model="form.last_name" type="text" />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>{{ t('settings.birthDate') }}</label>
-            <input v-model="form.birth_date" type="date" />
+            <label for="settings-father-name">{{ t('settings.fatherName') }}</label>
+            <input id="settings-father-name" name="father_name" v-model="form.father_name" type="text" />
           </div>
           <div class="form-group">
-            <label>{{ t('settings.birthPlace') }}</label>
-            <input v-model="form.birth_place" type="text" />
+            <label for="settings-grandfather-name">{{ t('settings.grandfatherName') }}</label>
+            <input id="settings-grandfather-name" name="grandfather_name" v-model="form.grandfather_name" type="text" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="settings-birth-date">{{ t('settings.birthDate') }}</label>
+            <input id="settings-birth-date" name="birth_date" v-model="form.birth_date" type="date" />
+          </div>
+          <div class="form-group">
+            <label for="settings-birth-place">{{ t('settings.birthPlace') }}</label>
+            <input id="settings-birth-place" name="birth_place" v-model="form.birth_place" type="text" />
           </div>
         </div>
 
@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
@@ -77,16 +77,20 @@ const error = ref('')
 const success = ref('')
 const { t } = useI18n()
 
-onMounted(() => {
-  if (authStore.user) {
-    form.first_name = authStore.user.first_name || ''
-    form.last_name = authStore.user.last_name || ''
-    form.father_name = authStore.user.father_name || ''
-    form.grandfather_name = authStore.user.grandfather_name || ''
-    form.birth_date = authStore.user.birth_date || ''
-    form.birth_place = authStore.user.birth_place || ''
-  }
-})
+watch(
+  () => authStore.user,
+  (user) => {
+    if (user) {
+      form.first_name = user.first_name || ''
+      form.last_name = user.last_name || ''
+      form.father_name = user.father_name || ''
+      form.grandfather_name = user.grandfather_name || ''
+      form.birth_date = user.birth_date || ''
+      form.birth_place = user.birth_place || ''
+    }
+  },
+  { immediate: true }
+)
 
 async function handleUpdate() {
   loading.value = true

@@ -53,7 +53,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTreeStore } from '../stores/tree'
@@ -78,14 +78,20 @@ const { t } = useI18n()
 
 let xlsxPromise = null
 
-onMounted(async () => {
-  if (isEdit.value) {
-    const person = await treeStore.fetchPerson(parseInt(route.params.id))
-    if (person) {
-      personData.value = person
+watch(
+  () => route.params.id,
+  async (newId) => {
+    if (newId) {
+      const person = await treeStore.fetchPerson(parseInt(newId))
+      if (person) {
+        personData.value = person
+      }
+    } else {
+      personData.value = null
     }
-  }
-})
+  },
+  { immediate: true }
+)
 
 function openImportDialog() {
   if (!canUseExcel.value) {
