@@ -739,10 +739,10 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   border: 1px solid rgba(148, 163, 184, 0.42);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.93), rgba(241, 245, 249, 0.86));
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.14);
-  padding: 12px 12px 10px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   position: relative;
 }
@@ -797,7 +797,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 .node-actions-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 

@@ -7,9 +7,9 @@ import {
 } from '../utils/treeUtils.js'
 
 export const NODE_W = 220
-export const NODE_H = 90
+export const NODE_H = 130
 export const GAP_X = 96
-export const GAP_Y = 40
+export const GAP_Y = 56
 export const SCENE_PAD = 80
 
 export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = null) {
