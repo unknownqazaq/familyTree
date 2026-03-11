@@ -224,6 +224,10 @@ const messages = {
       reference: 'Reference',
       history: 'History',
     },
+    footer: {
+      privacy: 'Privacy Policy',
+      terms: 'Terms of Service',
+    },
   },
   ru: {
     nav: {
@@ -445,6 +449,10 @@ const messages = {
       reference: 'Источник',
       history: 'История',
     },
+    footer: {
+      privacy: 'Политика конфиденциальности',
+      terms: 'Условия использования',
+    },
   },
   kk: {
     nav: {
@@ -665,6 +673,10 @@ const messages = {
       designation: 'Лауазым',
       reference: 'Дереккөз',
       history: 'Тарих',
+    },
+    footer: {
+      privacy: 'Құпиялылық саясаты',
+      terms: 'Пайдалану шарттары',
     },
   },
 }

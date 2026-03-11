@@ -794,14 +794,14 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .node-label {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 650;
   color: var(--text);
   line-height: 1.25;
-  /* Allow up to 2 lines so the full name is always visible */
+  /* Names wrap at word boundaries only — never mid-word */
   white-space: normal;
-  word-break: break-word;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
