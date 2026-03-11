@@ -212,6 +212,9 @@ onUnmounted(() => {
   border: 1px solid rgba(148, 163, 184, 0.3);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px);
+  overflow: visible;
+  position: relative;
+  z-index: 10;
 }
 
 .controls-row {
