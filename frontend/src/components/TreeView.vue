@@ -68,6 +68,19 @@
         @fit="fitToScreen"
         @reset="resetView"
       />
+      <TreeMinimap
+        :nodes="layoutNodes"
+        :sceneWidth="sceneBounds.width"
+        :sceneHeight="sceneBounds.height"
+        :viewportWidth="viewportWidth"
+        :viewportHeight="viewportHeight"
+        :panX="gestures.panX.value"
+        :panY="gestures.panY.value"
+        :zoomScale="gestures.zoomScale.value"
+        :nodeW="NODE_W"
+        :nodeH="NODE_H"
+        @navigate="handleMinimapNavigate"
+      />
     </div>
 
     <div v-if="modalState" class="modal-backdrop" @click.self="closeModal()">
@@ -166,6 +179,7 @@ import {
 } from '../utils/treeUtils.js'
 import TreeNode from './TreeNode.vue'
 import ZoomControls from './tree/ZoomControls.vue'
+import TreeMinimap from './tree/TreeMinimap.vue'
 
 const props = defineProps({
   persons: { type: Array, default: () => [] },
@@ -185,6 +199,8 @@ const sceneRef    = ref(null)
 // ─── Viewport / window state ───────────────────────────────────────────────────
 const isFullscreen    = ref(false)
 const windowWidth     = ref(typeof window !== 'undefined' ? window.innerWidth : 1200)
+const viewportWidth   = ref(typeof window !== 'undefined' ? window.innerWidth : 800)
+const viewportHeight  = ref(600)
 
 // ─── Tree navigation state ─────────────────────────────────────────────────────
 const collapsedNodeIds = ref(new Set())
@@ -429,6 +445,18 @@ function handleFullscreenChange() {
 
 function handleWindowResize() {
   windowWidth.value = window.innerWidth
+  if (viewportRef.value) {
+    viewportWidth.value  = viewportRef.value.clientWidth
+    viewportHeight.value = viewportRef.value.clientHeight
+  }
+}
+
+function handleMinimapNavigate({ sceneX, sceneY }) {
+  const vp = viewportRef.value
+  if (!vp) return
+  const z = gestures.zoomScale.value
+  gestures.panX.value = vp.clientWidth  / 2 - sceneX * z
+  gestures.panY.value = vp.clientHeight / 2 - sceneY * z
 }
 
 // ─── Watchers ─────────────────────────────────────────────────────────────────
@@ -503,6 +531,10 @@ onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
 
   syncFullscreenState()
+  if (viewportRef.value) {
+    viewportWidth.value  = viewportRef.value.clientWidth
+    viewportHeight.value = viewportRef.value.clientHeight
+  }
 })
 
 onUnmounted(() => {

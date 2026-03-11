@@ -32,8 +32,8 @@
       </div>
     </div>
 
-    <div v-else-if="!loading" class="card empty-state">
-      <p>{{ t('moderation.empty') }}</p>
+    <div v-else-if="!loading" class="card empty-wrapper">
+      <EmptyState type="moderation" />
     </div>
   </div>
 </template>
@@ -42,6 +42,7 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import api from '../api'
+import EmptyState from '../components/ui/EmptyState.vue'
 
 const persons = ref([])
 const loading = ref(false)
@@ -134,9 +135,7 @@ async function publish(id) {
   color: #888;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  color: #888;
+.empty-wrapper {
+  padding: 0;
 }
 </style>
