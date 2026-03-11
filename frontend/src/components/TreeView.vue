@@ -139,7 +139,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/auth'
 import { useTreeStore } from '../stores/tree'
@@ -401,20 +401,20 @@ watch(
 
 // Auto-center once on first layout; mark layout as settled for transitions
 const layoutSettled = ref(false)
-watch(
-  layoutNodes,
-  (nodes) => {
-    if (!autoCentered.value && nodes.length > 0) {
-      nextTick(() => {
-        centerTree('auto')
-        autoCentered.value = true
-        // Delay enabling position transitions so initial placement never animates
-        setTimeout(() => { layoutSettled.value = true }, 120)
-      })
-    }
-  },
-  { immediate: true },
-)
+watchEffect(() => {
+  if (
+    !autoCentered.value &&
+    layoutNodes.value.length > 0 &&
+    viewportRef.value
+  ) {
+    // All three conditions met: not yet centered, data ready, DOM ready
+    nextTick(() => {
+      centerTree('auto')
+      autoCentered.value = true
+      setTimeout(() => { layoutSettled.value = true }, 120)
+    })
+  }
+})
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
 onMounted(() => {
