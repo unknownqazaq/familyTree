@@ -10,7 +10,7 @@ import {
 export const NODE_W = 220
 export const NODE_H = 130
 export const GAP_X = 60
-export const GAP_Y = 20
+export const GAP_Y = 40
 export const SCENE_PAD = 80
 
 export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = null) {
@@ -35,7 +35,7 @@ export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = nu
 
     tree()
       .nodeSize([NODE_H + GAP_Y, NODE_W + GAP_X])
-      .separation((a, b) => a.parent === b.parent ? 1 : 1.2)(root)
+      .separation(() => 1)(root)
 
     // 3. Collect nodes, skipping VIRTUAL_ROOT
     const allNodes = root.descendants().filter(d => d.data.id !== 'VIRTUAL_ROOT')
