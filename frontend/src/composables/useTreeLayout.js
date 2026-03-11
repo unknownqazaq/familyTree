@@ -156,11 +156,10 @@ export function useTreeLayout(personsRef, collapsedNodeIdsRef, nodeSizesRef = nu
       nodes.forEach((n) => { n.y += yOffset })
     }
 
-    const posById = new Map(nodes.map((n) => [n.id, n]))
     const layoutEdges = edges
       .map((edge) => {
-        const parent = posById.get(edge.parentId)
-        const child = posById.get(edge.childId)
+        const parent = nodesById.get(edge.parentId)
+        const child = nodesById.get(edge.childId)
         if (!parent || !child) return null
         return {
           id: `${edge.parentId}-${edge.childId}`,

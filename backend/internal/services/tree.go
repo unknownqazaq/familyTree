@@ -122,7 +122,12 @@ func (s *TreeService) FindPath(fromID, toID int) ([]models.PathNode, error) {
 	var path []models.PathNode
 	for current := toID; current != -1; current = parent[current] {
 		p := personMap[current]
-		path = append([]models.PathNode{{ID: p.ID, Name: p.Name}}, path...)
+		path = append(path, models.PathNode{ID: p.ID, Name: p.Name})
+	}
+
+	// Reverse path to get from → to order
+	for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
+		path[i], path[j] = path[j], path[i]
 	}
 
 	return path, nil

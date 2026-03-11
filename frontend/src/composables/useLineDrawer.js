@@ -6,6 +6,7 @@
  */
 export function useLineDrawer({ linesRef, stageRef, mountRef }) {
   let lineFrameId = null
+  let cachedLineColor = null
 
   // ─── Pure helpers ───────────────────────────────────────────────────────────
 
@@ -23,6 +24,19 @@ export function useLineDrawer({ linesRef, stageRef, mountRef }) {
     return `M ${px} ${py} C ${midX} ${py}, ${midX} ${cy}, ${cx} ${cy}`
   }
 
+  function resolveLineColor() {
+    if (cachedLineColor) return cachedLineColor
+    if (!stageRef.value) return 'rgba(148, 163, 184, 0.4)'
+    cachedLineColor =
+      getComputedStyle(stageRef.value).getPropertyValue('--line-color').trim() ||
+      'rgba(148, 163, 184, 0.4)'
+    return cachedLineColor
+  }
+
+  function invalidateLineColor() {
+    cachedLineColor = null
+  }
+
   // ─── Draw ────────────────────────────────────────────────────────────────────
 
   function drawLines() {
@@ -31,9 +45,7 @@ export function useLineDrawer({ linesRef, stageRef, mountRef }) {
     linesRef.value.innerHTML = ''
 
     const stageRect = stageRef.value.getBoundingClientRect()
-    const lineColor =
-      getComputedStyle(stageRef.value).getPropertyValue('--line-color').trim() ||
-      'rgba(148, 163, 184, 0.4)'
+    const lineColor = resolveLineColor()
 
     mountRef.value.querySelectorAll('.tree-row').forEach((row) => {
       if (row.classList.contains('collapsed')) return
@@ -90,5 +102,5 @@ export function useLineDrawer({ linesRef, stageRef, mountRef }) {
     }
   }
 
-  return { drawLines, scheduleDrawLines, cancelScheduled, buildCurvePath }
+  return { drawLines, scheduleDrawLines, cancelScheduled, buildCurvePath, invalidateLineColor }
 }

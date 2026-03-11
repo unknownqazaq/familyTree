@@ -12,7 +12,9 @@
  */
 export function buildPersonById(persons) {
   const map = new Map()
-  persons.forEach((p) => map.set(p.id, p))
+  for (const p of persons) {
+    map.set(p.id, p)
+  }
   return map
 }
 
@@ -23,12 +25,14 @@ export function buildPersonById(persons) {
  */
 export function buildChildrenByParentId(persons) {
   const map = new Map()
-  persons.forEach((p) => map.set(p.id, []))
-  persons.forEach((p) => {
+  for (const p of persons) {
+    map.set(p.id, [])
+  }
+  for (const p of persons) {
     if (p.parent_id != null && map.has(p.parent_id)) {
       map.get(p.parent_id).push(p.id)
     }
-  })
+  }
   return map
 }
 
