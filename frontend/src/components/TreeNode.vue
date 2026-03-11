@@ -9,49 +9,50 @@
     :data-node-id="person.id"
     @click.stop="handleClick"
   >
-    <div class="node-top">
-      <div class="label-line">
-        <span class="node-dot"></span>
-        <span class="node-label" :title="person.name">{{ person.name }}</span>
-      </div>
-
-      <div class="node-actions-wrap">
-        <div v-if="canManage" class="node-actions-hover">
-          <button
-            class="icon-btn add-btn"
-            :title="t('treeMap.addTitle')"
-            :aria-label="t('treeMap.addTitle')"
-            @click.stop="$emit('add')"
-          >+</button>
-          <button
-            class="icon-btn edit-btn"
-            :title="t('treeMap.editTitle')"
-            :aria-label="t('treeMap.editTitle')"
-            @click.stop="$emit('edit')"
-          >✎</button>
-          <button
-            class="icon-btn danger-btn"
-            :title="t('treeMap.deleteTitle')"
-            :aria-label="t('treeMap.deleteTitle')"
-            @click.stop="$emit('delete')"
-          >✕</button>
-        </div>
-        <button
-          v-if="hasChildren || isLoading"
-          class="icon-btn toggle-btn"
-          :class="{ 'is-loading': isLoading }"
-          :title="isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')"
-          :aria-label="isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')"
-          :aria-expanded="!isCollapsed"
-          :disabled="isLoading"
-          @click.stop="$emit('toggle')"
-        >
-          <span v-if="isLoading" class="node-spinner"></span>
-          <template v-else>{{ isCollapsed ? '›' : '‹' }}</template>
-        </button>
-      </div>
+    <!-- Section 1: Full name, no truncation -->
+    <div class="node-header">
+      <span class="node-dot"></span>
+      <span class="node-label">{{ person.name }}</span>
     </div>
 
+    <!-- Section 2: Action buttons, always visible, larger -->
+    <div v-if="canManage || hasChildren || isLoading" class="node-actions-row">
+      <template v-if="canManage">
+        <button
+          class="icon-btn add-btn"
+          :title="t('treeMap.addTitle')"
+          :aria-label="t('treeMap.addTitle')"
+          @click.stop="$emit('add')"
+        >+</button>
+        <button
+          class="icon-btn edit-btn"
+          :title="t('treeMap.editTitle')"
+          :aria-label="t('treeMap.editTitle')"
+          @click.stop="$emit('edit')"
+        >✎</button>
+        <button
+          class="icon-btn danger-btn"
+          :title="t('treeMap.deleteTitle')"
+          :aria-label="t('treeMap.deleteTitle')"
+          @click.stop="$emit('delete')"
+        >✕</button>
+      </template>
+      <button
+        v-if="hasChildren || isLoading"
+        class="icon-btn toggle-btn"
+        :class="{ 'is-loading': isLoading }"
+        :title="isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')"
+        :aria-label="isCollapsed ? t('treeMap.expand') : t('treeMap.collapse')"
+        :aria-expanded="!isCollapsed"
+        :disabled="isLoading"
+        @click.stop="$emit('toggle')"
+      >
+        <span v-if="isLoading" class="node-spinner"></span>
+        <template v-else>{{ isCollapsed ? '›' : '‹' }}</template>
+      </button>
+    </div>
+
+    <!-- Section 3: Content -->
     <div
       v-if="person.designation"
       class="node-designation"
@@ -79,6 +80,7 @@
       @click.stop="expandedMeta = !expandedMeta"
     >{{ expandedMeta ? t('common.showLess') : t('common.showMore') }}</button>
 
+    <!-- Section 4: Access badge -->
     <span
       v-if="person.access"
       class="access-badge"

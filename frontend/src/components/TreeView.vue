@@ -763,20 +763,10 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   border-color: rgba(129, 140, 248, 0.45);
 }
 
-.node-top {
+.node-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
-}
-
-.label-line {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  overflow: hidden;
-  flex: 1 1 auto;
 }
 
 .node-dot {
@@ -784,6 +774,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   height: 10px;
   border-radius: 999px;
   flex: 0 0 auto;
+  margin-top: 3px;
   background: radial-gradient(circle at 30% 30%, var(--accent), rgba(56, 189, 248, 0.24));
   box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.16);
 }
@@ -794,38 +785,20 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .node-label {
-  font-size: 14px;
-  font-weight: 650;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text);
   line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-  flex: 1 1 auto;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
-.node-actions-wrap {
+.node-actions-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
-  flex-shrink: 0;
-  align-self: flex-start;
-}
-
-.node-actions-hover {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-}
-
-.tree-node:hover .node-actions-hover,
-.tree-node:focus-within .node-actions-hover {
-  opacity: 1;
-  pointer-events: all;
+  flex-wrap: wrap;
 }
 
 /* ── Path highlighting ──────────────────────────────────────────────── */
@@ -843,15 +816,15 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .icon-btn {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.4);
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   color: #334155;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   padding: 0;
@@ -1066,7 +1039,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   }
 
   .node-label {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .node-designation,
@@ -1075,10 +1048,10 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   }
 
   .icon-btn {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .access-badge {
