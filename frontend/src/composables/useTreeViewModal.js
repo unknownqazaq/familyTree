@@ -31,7 +31,7 @@ export function useTreeViewModal({
     designation: '',
     reference: '',
     history: '',
-    access: 'private',
+    access: 'public',
   })
 
   // ─── Computed ────────────────────────────────────────────────────────────────
@@ -77,7 +77,7 @@ export function useTreeViewModal({
     formState.designation = ''
     formState.reference = ''
     formState.history = ''
-    formState.access = 'private'
+    formState.access = 'public'
   }
 
   // D2 — unified modal-open preamble
@@ -120,7 +120,7 @@ export function useTreeViewModal({
     resetFormState()
     const parent = personById.value.get(nodeId)
     formState.parent_id = String(nodeId)
-    formState.access = 'private'
+    formState.access = 'public'
   }
 
   function openEditModal(nodeId) {
@@ -133,7 +133,7 @@ export function useTreeViewModal({
     formState.designation = person.designation || ''
     formState.reference = person.reference || ''
     formState.history = person.history || ''
-    formState.access = person.access || 'private'
+    formState.access = person.access || 'public'
   }
 
   function openDeleteModal(nodeId) {
