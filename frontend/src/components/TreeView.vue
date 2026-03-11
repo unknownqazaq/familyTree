@@ -798,14 +798,9 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   font-weight: 650;
   color: var(--text);
   line-height: 1.25;
-  /* Names wrap at word boundaries only — never mid-word */
-  white-space: normal;
-  word-break: normal;
-  overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
   min-width: 0;
   flex: 1 1 auto;
 }
