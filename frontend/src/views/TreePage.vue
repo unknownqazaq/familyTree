@@ -14,10 +14,12 @@
     <div class="tree-controls card fade-up">
       <div class="controls-row">
         <div class="search-group">
+          <label class="control-label">{{ t('search.searchLabel') }}</label>
           <SearchBar :placeholder="t('search.personsPlaceholder')" @select="onSearchSelect" />
         </div>
 
         <form class="path-finder" @submit.prevent="findPath">
+          <label class="control-label">{{ t('search.pathLabel') }}</label>
           <SearchBar :placeholder="t('search.fromPlaceholder')" @select="onFromSelect" />
           <SearchBar :placeholder="t('search.toPlaceholder')" @select="onToSelect" />
           <button type="submit" class="btn-primary">
@@ -343,6 +345,16 @@ onUnmounted(() => {
   100% {
     box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
   }
+}
+
+.control-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-2);
+  margin-bottom: 6px;
 }
 
 @media (max-width: 980px) {

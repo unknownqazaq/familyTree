@@ -49,7 +49,7 @@ const features = [
   margin-bottom: 8px;
 }
 
-h2 { font-size: 24px; font-weight: 600; color: #1C2833; }
+h2 { font-size: 24px; font-weight: 600; color: var(--c-text); }
 
 .cards-grid {
   display: grid;
@@ -60,8 +60,8 @@ h2 { font-size: 24px; font-weight: 600; color: #1C2833; }
 }
 
 .feature-card {
-  background: #fff;
-  border: 1px solid #EAECEE;
+  background: var(--c-bg-2);
+  border: 1px solid var(--c-border);
   border-top: 3px solid #C9A96E;
   border-radius: 8px;
   padding: 24px;
@@ -75,15 +75,15 @@ h2 { font-size: 24px; font-weight: 600; color: #1C2833; }
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #EAECEE;
+  background: var(--c-fill-3);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
 }
 
-h3 { font-size: 16px; font-weight: 600; color: #1C2833; margin-bottom: 8px; }
-p  { font-size: 14px; color: #5D6D7E; line-height: 1.6; }
+h3 { font-size: 16px; font-weight: 600; color: var(--c-text); margin-bottom: 8px; }
+p  { font-size: 14px; color: var(--c-text-2); line-height: 1.6; }
 
 @media (max-width: 700px) { .cards-grid { grid-template-columns: 1fr; } }
 </style>

@@ -16,9 +16,11 @@ const messages = {
       register: 'Register',
       logout: 'Logout',
       language: 'Language',
+      userMenu: 'User account menu',
     },
     home: {
       kicker: 'Welcome to your digital ancestry space',
+      featuresHeading: 'Platform features',
       title: 'Family Tree',
       subtitle:
         'Explore and manage your family history. Add family members, build your tree, and discover connections.',
@@ -71,6 +73,8 @@ const messages = {
       parentPlaceholder: 'Search for parent...',
       fromPlaceholder: 'From person...',
       toPlaceholder: 'To person...',
+      searchLabel: 'Search person',
+      pathLabel: 'Find path between people',
     },
     tree: {
       heroKicker: 'Your living family map',
@@ -241,9 +245,11 @@ const messages = {
       register: 'Регистрация',
       logout: 'Выход',
       language: 'Язык',
+      userMenu: 'Меню пользователя',
     },
     home: {
       kicker: 'Добро пожаловать в ваше цифровое родословное пространство',
+      featuresHeading: 'Возможности платформы',
       title: 'Семейное древо',
       subtitle:
         'Исследуйте и управляйте историей семьи. Добавляйте родственников, строьте дерево и находите связи.',
@@ -296,6 +302,8 @@ const messages = {
       parentPlaceholder: 'Поиск родителя...',
       fromPlaceholder: 'От кого...',
       toPlaceholder: 'К кому...',
+      searchLabel: 'Поиск человека',
+      pathLabel: 'Найти путь между людьми',
     },
     tree: {
       heroKicker: 'Живой архив родословной',
@@ -466,9 +474,11 @@ const messages = {
       register: 'Тіркелу',
       logout: 'Шығу',
       language: 'Тіл',
+      userMenu: 'Пайдаланушы мәзірі',
     },
     home: {
       kicker: 'Цифрлық шежіре кеңістігіне қош келдіңіз',
+      featuresHeading: 'Платформа мүмкіндіктері',
       title: 'Отбасы шежіресі',
       subtitle:
         'Отбасы тарихын зерттеп, басқарыңыз. Туыстарды қосыңыз, шежіре құрыңыз және туыстарды табыңыз.',
@@ -521,6 +531,8 @@ const messages = {
       parentPlaceholder: 'Ата-ананы іздеу...',
       fromPlaceholder: 'Қайдан...',
       toPlaceholder: 'Қайда...',
+      searchLabel: 'Адамды іздеу',
+      pathLabel: 'Адамдар арасындағы жолды табу',
     },
     tree: {
       heroKicker: 'Шежіре картасы',

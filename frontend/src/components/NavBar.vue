@@ -39,7 +39,7 @@
         <!-- Authenticated -->
         <template v-if="authStore.isAuthenticated">
           <div class="user-menu" ref="menuRef">
-            <button class="avatar-btn" @click="dropdownOpen = !dropdownOpen" :aria-expanded="dropdownOpen">
+            <button class="avatar-btn" @click="dropdownOpen = !dropdownOpen" :aria-expanded="dropdownOpen" :aria-label="t('nav.userMenu')">
               <span class="avatar-circle">{{ avatarLetter }}</span>
             </button>
 
