@@ -73,4 +73,9 @@ const emit = defineEmits(['zoom-in', 'zoom-out', 'fit', 'reset'])
 }
 
 .divider { height: 1px; background: var(--border, rgba(255, 255, 255, 0.08)); margin: 2px 4px; }
+
+.ctrl-btn svg {
+  stroke: var(--text, #ffffff);
+  fill: none;
+}
 </style>
