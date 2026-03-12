@@ -17,22 +17,24 @@ type Person struct {
 	HasChildren bool `json:"has_children" db:"-"`
 }
 
-type CreatePersonRequest struct {
-	Name        string  `json:"name" binding:"required"`
-	ParentID    *int    `json:"parent_id"`
-	Reference   *string `json:"reference"`
-	Designation *string `json:"designation"`
-	History     *string `json:"history"`
-	Access      string  `json:"access"`
+// CreatePersonParams holds the data needed to create a person (transport-agnostic).
+type CreatePersonParams struct {
+	Name        string
+	ParentID    *int
+	Reference   *string
+	Designation *string
+	History     *string
+	Access      string
 }
 
-type UpdatePersonRequest struct {
-	Name        *string `json:"name"`
-	ParentID    *int    `json:"parent_id"`
-	Reference   *string `json:"reference"`
-	Designation *string `json:"designation"`
-	History     *string `json:"history"`
-	Access      *string `json:"access"`
+// UpdatePersonParams holds the data for a partial person update (transport-agnostic).
+type UpdatePersonParams struct {
+	Name        *string
+	ParentID    *int
+	Reference   *string
+	Designation *string
+	History     *string
+	Access      *string
 }
 
 type TreeNode struct {

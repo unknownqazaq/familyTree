@@ -5,38 +5,38 @@ import (
 	"time"
 
 	"family-tree/internal/config"
+	"family-tree/internal/middleware"
 	"family-tree/internal/models"
-	"family-tree/internal/repository"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
-	userRepo *repository.UserRepository
+	userRepo UserRepository
 	cfg      *config.Config
 }
 
-func NewAuthService(userRepo *repository.UserRepository, cfg *config.Config) *AuthService {
+func NewAuthService(userRepo UserRepository, cfg *config.Config) *AuthService {
 	return &AuthService{userRepo: userRepo, cfg: cfg}
 }
 
-func (s *AuthService) Register(req *models.RegisterRequest) (*models.User, error) {
-	existing, _ := s.userRepo.GetByEmail(req.Email)
+func (s *AuthService) Register(email, password, firstName, lastName string) (*models.User, error) {
+	existing, _ := s.userRepo.GetByEmail(email)
 	if existing != nil {
 		return nil, errors.New("email already registered")
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
 	user := &models.User{
-		Email:        req.Email,
+		Email:        email,
 		PasswordHash: string(hash),
-		FirstName:    &req.FirstName,
-		LastName:     &req.LastName,
+		FirstName:    &firstName,
+		LastName:     &lastName,
 		Role:         "user",
 	}
 
@@ -47,13 +47,13 @@ func (s *AuthService) Register(req *models.RegisterRequest) (*models.User, error
 	return user, nil
 }
 
-func (s *AuthService) Login(req *models.LoginRequest) (*models.TokenResponse, error) {
-	user, err := s.userRepo.GetByEmail(req.Email)
+func (s *AuthService) Login(email, password string) (*models.TokenResponse, error) {
+	user, err := s.userRepo.GetByEmail(email)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 
@@ -61,24 +61,15 @@ func (s *AuthService) Login(req *models.LoginRequest) (*models.TokenResponse, er
 }
 
 func (s *AuthService) RefreshToken(refreshToken string) (*models.TokenResponse, error) {
-	claims := &jwt.MapClaims{}
-	token, err := jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(s.cfg.JWTSecret), nil
-	})
-
-	if err != nil || !token.Valid {
+	tc := middleware.ParseToken(refreshToken, s.cfg.JWTSecret)
+	if tc == nil {
 		return nil, errors.New("invalid refresh token")
 	}
-
-	tokenType, _ := (*claims)["type"].(string)
-	if tokenType != "refresh" {
+	if tc.Type != "refresh" {
 		return nil, errors.New("invalid token type")
 	}
 
-	userIDFloat, _ := (*claims)["user_id"].(float64)
-	userID := int(userIDFloat)
-
-	user, err := s.userRepo.GetByID(userID)
+	user, err := s.userRepo.GetByID(tc.UserID)
 	if err != nil {
 		return nil, errors.New("user not found")
 	}
@@ -90,7 +81,7 @@ func (s *AuthService) GetUser(id int) (*models.User, error) {
 	return s.userRepo.GetByID(id)
 }
 
-func (s *AuthService) UpdateProfile(id int, req *models.UpdateProfileRequest) error {
+func (s *AuthService) UpdateProfile(id int, req *models.UpdateProfileParams) error {
 	user, err := s.userRepo.GetByID(id)
 	if err != nil {
 		return err

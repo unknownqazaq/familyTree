@@ -38,14 +38,15 @@ func main() {
 
 	// Services
 	authService := services.NewAuthService(userRepo, cfg)
+	personService := services.NewPersonService(personRepo)
 	treeService := services.NewTreeService(personRepo)
 	backupService := services.NewBackupService(cfg)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authService)
-	personHandler := handlers.NewPersonHandler(personRepo)
+	personHandler := handlers.NewPersonHandler(personService)
 	treeHandler := handlers.NewTreeHandler(treeService)
-	adminHandler := handlers.NewAdminHandler(personRepo, backupService)
+	adminHandler := handlers.NewAdminHandler(personService, backupService)
 
 	r := gin.Default()
 	r.Use(middleware.CORSMiddleware())

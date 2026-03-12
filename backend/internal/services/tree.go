@@ -4,14 +4,13 @@ import (
 	"errors"
 
 	"family-tree/internal/models"
-	"family-tree/internal/repository"
 )
 
 type TreeService struct {
-	personRepo *repository.PersonRepository
+	personRepo PersonRepository
 }
 
-func NewTreeService(personRepo *repository.PersonRepository) *TreeService {
+func NewTreeService(personRepo PersonRepository) *TreeService {
 	return &TreeService{personRepo: personRepo}
 }
 

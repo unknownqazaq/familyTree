@@ -6,6 +6,7 @@
  * Eliminates: D1 (duplicated catch block), D2 (modal-open preamble ×3).
  */
 import { computed, nextTick, reactive, ref } from 'vue'
+import { collectDescendantIds as _collectDescendantIds } from '../utils/treeUtils'
 
 export function useTreeViewModal({
   authStore,
@@ -47,13 +48,7 @@ export function useTreeViewModal({
   })
 
   function collectDescendantIds(nodeId, collected = new Set()) {
-    const children = childrenByParentId.value.get(nodeId) || []
-    children.forEach((childId) => {
-      if (collected.has(childId)) return
-      collected.add(childId)
-      collectDescendantIds(childId, collected)
-    })
-    return collected
+    return _collectDescendantIds(nodeId, childrenByParentId.value, collected)
   }
 
   const blockedParentIds = computed(() => {
@@ -118,7 +113,6 @@ export function useTreeViewModal({
     if (!authStore.isAuthenticated) return
     beginModal(nodeId, 'add')
     resetFormState()
-    const parent = personById.value.get(nodeId)
     formState.parent_id = String(nodeId)
     formState.access = 'public'
   }

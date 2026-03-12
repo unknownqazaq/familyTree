@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"family-tree/internal/middleware"
 	"family-tree/internal/models"
 	"family-tree/internal/services"
 
@@ -18,13 +19,13 @@ func NewAuthHandler(authService *services.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
-	var req models.RegisterRequest
+	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user, err := h.authService.Register(&req)
+	user, err := h.authService.Register(req.Email, req.Password, req.FirstName, req.LastName)
 	if err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
 		return
@@ -37,13 +38,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var req models.LoginRequest
+	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	tokens, err := h.authService.Login(&req)
+	tokens, err := h.authService.Login(req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
@@ -53,7 +54,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
-	var req models.RefreshRequest
+	var req RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -73,8 +74,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 func (h *AuthHandler) Me(c *gin.Context) {
-	userID, _ := c.Get("user_id")
-	user, err := h.authService.GetUser(userID.(int))
+	user, err := h.authService.GetUser(middleware.GetUserID(c))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
@@ -84,14 +84,20 @@ func (h *AuthHandler) Me(c *gin.Context) {
 }
 
 func (h *AuthHandler) UpdateSettings(c *gin.Context) {
-	userID, _ := c.Get("user_id")
-	var req models.UpdateProfileRequest
+	var req UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.authService.UpdateProfile(userID.(int), &req); err != nil {
+	if err := h.authService.UpdateProfile(middleware.GetUserID(c), &models.UpdateProfileParams{
+		FirstName:       req.FirstName,
+		FatherName:      req.FatherName,
+		GrandfatherName: req.GrandfatherName,
+		LastName:        req.LastName,
+		BirthDate:       req.BirthDate,
+		BirthPlace:      req.BirthPlace,
+	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -100,8 +106,7 @@ func (h *AuthHandler) UpdateSettings(c *gin.Context) {
 }
 
 func (h *AuthHandler) DeleteAccount(c *gin.Context) {
-	userID, _ := c.Get("user_id")
-	if err := h.authService.DeleteAccount(userID.(int)); err != nil {
+	if err := h.authService.DeleteAccount(middleware.GetUserID(c)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

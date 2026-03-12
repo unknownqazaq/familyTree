@@ -4,18 +4,19 @@ import (
 	"net/http"
 	"strconv"
 
+	"family-tree/internal/middleware"
 	"family-tree/internal/models"
-	"family-tree/internal/repository"
+	"family-tree/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type PersonHandler struct {
-	personRepo *repository.PersonRepository
+	personService *services.PersonService
 }
 
-func NewPersonHandler(personRepo *repository.PersonRepository) *PersonHandler {
-	return &PersonHandler{personRepo: personRepo}
+func NewPersonHandler(personService *services.PersonService) *PersonHandler {
+	return &PersonHandler{personService: personService}
 }
 
 func (h *PersonHandler) GetPerson(c *gin.Context) {
@@ -25,58 +26,37 @@ func (h *PersonHandler) GetPerson(c *gin.Context) {
 		return
 	}
 
-	person, err := h.personRepo.GetByID(id)
+	person, err := h.personService.Get(id, middleware.GetUserID(c), middleware.GetRole(c))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
+		status := http.StatusNotFound
+		if err.Error() == "access denied" {
+			status = http.StatusForbidden
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
-	}
-
-	userID, _ := c.Get("user_id")
-	uid, _ := userID.(int)
-
-	if person.Access != "public" {
-		if uid == 0 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
-			return
-		}
-		canAccess, _ := h.personRepo.CanAccess(person.ID, uid)
-		role, _ := c.Get("role")
-		if !canAccess && role != "admin" && role != "staff" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
-			return
-		}
 	}
 
 	c.JSON(http.StatusOK, person)
 }
 
 func (h *PersonHandler) CreatePerson(c *gin.Context) {
-	var req models.CreatePersonRequest
+	var req CreatePersonRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	uid := userID.(int)
-
-	access := "private"
-	if req.Access != "" {
-		access = req.Access
-	}
-
-	person := &models.Person{
+	person, err := h.personService.Create(&models.CreatePersonParams{
 		Name:        req.Name,
 		ParentID:    req.ParentID,
 		Reference:   req.Reference,
 		Designation: req.Designation,
 		History:     req.History,
-		Access:      access,
-		CreatedBy:   &uid,
-	}
+		Access:      req.Access,
+	}, middleware.GetUserID(c))
 
-	if err := h.personRepo.Create(person); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create person"})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -90,49 +70,30 @@ func (h *PersonHandler) UpdatePerson(c *gin.Context) {
 		return
 	}
 
-	person, err := h.personRepo.GetByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
-		return
-	}
-
-	userID, _ := c.Get("user_id")
-	uid := userID.(int)
-	role, _ := c.Get("role")
-
-	isEditor, _ := h.personRepo.IsEditor(id, uid)
-	if person.CreatedBy == nil || (*person.CreatedBy != uid && !isEditor && role != "admin" && role != "staff") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized to edit this person"})
-		return
-	}
-
-	var req models.UpdatePersonRequest
+	var req UpdatePersonRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if req.Name != nil {
-		person.Name = *req.Name
-	}
-	if req.ParentID != nil {
-		person.ParentID = req.ParentID
-	}
-	if req.Reference != nil {
-		person.Reference = req.Reference
-	}
-	if req.Designation != nil {
-		person.Designation = req.Designation
-	}
-	if req.History != nil {
-		person.History = req.History
-	}
-	if req.Access != nil {
-		person.Access = *req.Access
-	}
+	person, err := h.personService.Update(id, &models.UpdatePersonParams{
+		Name:        req.Name,
+		ParentID:    req.ParentID,
+		Reference:   req.Reference,
+		Designation: req.Designation,
+		History:     req.History,
+		Access:      req.Access,
+	}, middleware.GetUserID(c), middleware.GetRole(c))
 
-	if err := h.personRepo.Update(person); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update person"})
+	if err != nil {
+		status := http.StatusInternalServerError
+		switch err.Error() {
+		case "person not found":
+			status = http.StatusNotFound
+		case "not authorized to edit this person":
+			status = http.StatusForbidden
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -146,23 +107,15 @@ func (h *PersonHandler) DeletePerson(c *gin.Context) {
 		return
 	}
 
-	person, err := h.personRepo.GetByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "person not found"})
-		return
-	}
-
-	userID, _ := c.Get("user_id")
-	uid := userID.(int)
-	role, _ := c.Get("role")
-
-	if person.CreatedBy == nil || (*person.CreatedBy != uid && role != "admin") {
-		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized to delete this person"})
-		return
-	}
-
-	if err := h.personRepo.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete person"})
+	if err := h.personService.Delete(id, middleware.GetUserID(c), middleware.GetRole(c)); err != nil {
+		status := http.StatusInternalServerError
+		switch err.Error() {
+		case "person not found":
+			status = http.StatusNotFound
+		case "not authorized to delete this person":
+			status = http.StatusForbidden
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -176,18 +129,7 @@ func (h *PersonHandler) SearchPersons(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	uid, _ := userID.(int)
-
-	var persons []models.Person
-	var err error
-
-	if uid > 0 {
-		persons, err = h.personRepo.SearchForUser(query, uid, 10)
-	} else {
-		persons, err = h.personRepo.Search(query, 10)
-	}
-
+	persons, err := h.personService.Search(query, middleware.GetUserID(c), 10)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "search failed"})
 		return
@@ -203,7 +145,7 @@ func (h *PersonHandler) GetChildren(c *gin.Context) {
 		return
 	}
 
-	children, err := h.personRepo.GetChildren(id)
+	children, err := h.personService.GetChildren(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get children"})
 		return

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
@@ -24,33 +23,20 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 
-		claims := &jwt.MapClaims{}
-		token, err := jwt.ParseWithClaims(parts[1], claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte(jwtSecret), nil
-		})
-
-		if err != nil || !token.Valid {
+		tc := ParseToken(parts[1], jwtSecret)
+		if tc == nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 			c.Abort()
 			return
 		}
 
-		tokenType, _ := (*claims)["type"].(string)
-		if tokenType != "access" {
+		if tc.Type != "access" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token type"})
 			c.Abort()
 			return
 		}
 
-		userIDFloat, _ := (*claims)["user_id"].(float64)
-		userID := int(userIDFloat)
-		email, _ := (*claims)["email"].(string)
-		role, _ := (*claims)["role"].(string)
-
-		c.Set("user_id", userID)
-		c.Set("email", email)
-		c.Set("role", role)
-
+		SetClaimsToContext(c, tc)
 		c.Next()
 	}
 }
@@ -71,35 +57,23 @@ func OptionalAuth(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 
-		claims := &jwt.MapClaims{}
-		token, err := jwt.ParseWithClaims(parts[1], claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte(jwtSecret), nil
-		})
-
-		if err != nil || !token.Valid {
+		tc := ParseToken(parts[1], jwtSecret)
+		if tc == nil {
 			c.Set("user_id", 0)
 			c.Next()
 			return
 		}
 
-		userIDFloat, _ := (*claims)["user_id"].(float64)
-		c.Set("user_id", int(userIDFloat))
-		email, _ := (*claims)["email"].(string)
-		role, _ := (*claims)["role"].(string)
-		c.Set("email", email)
-		c.Set("role", role)
-
+		SetClaimsToContext(c, tc)
 		c.Next()
 	}
 }
 
 func RoleMiddleware(roles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		role, _ := c.Get("role")
-		roleStr, _ := role.(string)
-
+		role := GetRole(c)
 		for _, r := range roles {
-			if r == roleStr {
+			if r == role {
 				c.Next()
 				return
 			}

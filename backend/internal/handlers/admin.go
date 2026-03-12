@@ -4,26 +4,25 @@ import (
 	"net/http"
 	"strconv"
 
-	"family-tree/internal/repository"
 	"family-tree/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type AdminHandler struct {
-	personRepo    *repository.PersonRepository
+	personService *services.PersonService
 	backupService *services.BackupService
 }
 
-func NewAdminHandler(personRepo *repository.PersonRepository, backupService *services.BackupService) *AdminHandler {
+func NewAdminHandler(personService *services.PersonService, backupService *services.BackupService) *AdminHandler {
 	return &AdminHandler{
-		personRepo:    personRepo,
+		personService: personService,
 		backupService: backupService,
 	}
 }
 
 func (h *AdminHandler) GetPending(c *gin.Context) {
-	persons, err := h.personRepo.GetPending()
+	persons, err := h.personService.GetPending()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get pending persons"})
 		return
@@ -39,7 +38,7 @@ func (h *AdminHandler) Publish(c *gin.Context) {
 		return
 	}
 
-	if err := h.personRepo.Publish(id); err != nil {
+	if err := h.personService.Publish(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to publish person"})
 		return
 	}

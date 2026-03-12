@@ -10,7 +10,6 @@ import { reactive, ref } from 'vue'
 // ─── Constants ────────────────────────────────────────────────────────────────
 export const MIN_ZOOM_SCALE    = 0.3
 export const MAX_ZOOM_SCALE    = 2.5
-export const ZOOM_STEP         = 0.1   // kept for API-compat; wheel uses proportional delta
 export const MOBILE_ZOOM_SCALE = 0.7
 export const TABLET_ZOOM_SCALE = 0.85
 

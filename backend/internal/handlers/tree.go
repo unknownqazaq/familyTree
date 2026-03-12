@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"family-tree/internal/middleware"
 	"family-tree/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -24,10 +25,7 @@ func (h *TreeHandler) GetTree(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	uid, _ := userID.(int)
-
-	tree, err := h.treeService.GetTree(id, uid)
+	tree, err := h.treeService.GetTree(id, middleware.GetUserID(c))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -37,10 +35,7 @@ func (h *TreeHandler) GetTree(c *gin.Context) {
 }
 
 func (h *TreeHandler) GetRoots(c *gin.Context) {
-	userID, _ := c.Get("user_id")
-	uid, _ := userID.(int)
-
-	persons, err := h.treeService.GetRoots(uid)
+	persons, err := h.treeService.GetRoots(middleware.GetUserID(c))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get roots"})
 		return
@@ -50,10 +45,7 @@ func (h *TreeHandler) GetRoots(c *gin.Context) {
 }
 
 func (h *TreeHandler) GetFullTree(c *gin.Context) {
-	userID, _ := c.Get("user_id")
-	uid, _ := userID.(int)
-
-	persons, err := h.treeService.GetFullTree(uid)
+	persons, err := h.treeService.GetFullTree(middleware.GetUserID(c))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get tree"})
 		return
