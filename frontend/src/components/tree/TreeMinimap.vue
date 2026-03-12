@@ -138,8 +138,8 @@ function handleHover() {
   bottom: 20px;
   left: 20px;
   z-index: 10;
-  background: var(--c-surface, rgba(255, 255, 255, 0.92));
-  border: 1px solid var(--c-border, rgba(148, 163, 184, 0.4));
+  background: var(--panel, rgba(28, 28, 30, 0.80));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
   backdrop-filter: blur(8px);
@@ -160,9 +160,9 @@ function handleHover() {
   padding: 7px 10px;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--c-border, rgba(226, 232, 240, 0.7));
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
   cursor: pointer;
-  color: var(--c-text-2, #64748b);
+  color: var(--muted, rgba(235, 235, 245, 0.55));
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -176,8 +176,8 @@ function handleHover() {
 }
 
 .minimap-toggle:hover {
-  background: var(--c-bg-3, rgba(241, 245, 249, 0.8));
-  color: var(--c-text, #334155);
+  background: var(--panel2, rgba(44, 44, 46, 0.90));
+  color: var(--text, #ffffff);
   transform: none;
 }
 

@@ -41,10 +41,10 @@ const emit = defineEmits(['zoom-in', 'zoom-out', 'fit', 'reset'])
   right: 20px;
   display: flex;
   flex-direction: column;
-  background: var(--c-surface, #fff);
-  border: 1px solid var(--c-border, transparent);
+  background: var(--panel, rgba(28, 28, 30, 0.80));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
   padding: 4px;
   gap: 2px;
   z-index: 10;
@@ -56,14 +56,14 @@ const emit = defineEmits(['zoom-in', 'zoom-out', 'fit', 'reset'])
   border-radius: 4px;
   border: none;
   background: transparent;
-  color: var(--c-text, #2C3E50);
+  color: var(--text, #ffffff);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s;
 }
-.ctrl-btn:hover { background: var(--c-bg-3, #EAECEE); }
+.ctrl-btn:hover { background: var(--panel2, rgba(44, 44, 46, 0.90)); }
 
-.divider { height: 1px; background: var(--c-border, #EAECEE); margin: 2px 4px; }
+.divider { height: 1px; background: var(--border, rgba(255, 255, 255, 0.08)); margin: 2px 4px; }
 </style>
