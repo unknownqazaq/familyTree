@@ -784,54 +784,62 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   max-width: 240px !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 14px;
   border: 1px solid var(--border);
   background: var(--panel);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.50);
-  padding: 14px 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(255, 255, 255, 0.04);
+  padding: 12px 12px 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
 }
 
 .tree-node:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
-  border-color: var(--border);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(255, 255, 255, 0.06);
 }
 
 /* Light-mode node overrides */
 [data-theme="light"] .tree-node {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(60, 60, 67, 0.12);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(60, 60, 67, 0.10);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06), 0 0 0 0.5px rgba(60, 60, 67, 0.08);
 }
 [data-theme="light"] .tree-node:hover {
-  border-color: rgba(0, 122, 255, 0.30);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 122, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.10), 0 0 0 0.5px rgba(0, 122, 255, 0.12);
 }
 [data-theme="light"] .root-node {
-  border-color: rgba(0, 122, 255, 0.35);
-  box-shadow: 0 0 0 1px rgba(0,122,255,0.12), 0 6px 20px rgba(0,0,0,0.10);
+  border-color: rgba(0, 122, 255, 0.30);
+  box-shadow: 0 0 0 1px rgba(0,122,255,0.10), 0 4px 16px rgba(0,0,0,0.08);
 }
-[data-theme="light"] .icon-btn {
+[data-theme="light"] .node-actions-bar {
+  background: rgba(255, 255, 255, 0.97);
+  border-top-color: rgba(60, 60, 67, 0.08);
+}
+[data-theme="light"] .act-btn {
+  border-color: rgba(60, 60, 67, 0.12);
+}
+[data-theme="light"] .act-btn:hover {
   background: rgba(60, 60, 67, 0.06);
-  border-color: rgba(60, 60, 67, 0.14);
-  color: rgba(60, 60, 67, 0.70);
+  border-color: rgba(60, 60, 67, 0.18);
 }
-[data-theme="light"] .icon-btn:hover {
-  background: rgba(60, 60, 67, 0.10);
-  border-color: rgba(60, 60, 67, 0.22);
-  color: #000;
+[data-theme="light"] .act-btn svg {
+  stroke: rgba(60, 60, 67, 0.5);
 }
-[data-theme="light"] .add-btn    { color: #007aff; }
-[data-theme="light"] .danger-btn { color: #ff3b30; }
-[data-theme="light"] .node-designation { color: rgba(60, 60, 67, 0.55); }
+[data-theme="light"] .act-btn:hover svg {
+  stroke: #000;
+}
+[data-theme="light"] .act-add:hover svg    { stroke: #007aff; }
+[data-theme="light"] .act-delete:hover svg { stroke: #ff3b30; }
 [data-theme="light"] .access-badge.is-public  { background: rgba(52, 199, 89, 0.12); color: #1a7f37; }
 [data-theme="light"] .access-badge.is-private { background: rgba(255, 149, 0, 0.12); color: #a85600; }
+[data-theme="light"] .node-spinner {
+  border-color: rgba(60, 60, 67, 0.15);
+  border-top-color: rgba(60, 60, 67, 0.6);
+}
 [data-theme="light"] .modal-card {
   background: rgba(255, 255, 255, 0.97);
   border-color: rgba(60, 60, 67, 0.14);
@@ -854,49 +862,8 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .root-node {
-  border-color: rgba(10, 132, 255, 0.40);
-  box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.15), 0 8px 28px rgba(0, 0, 0, 0.55);
-}
-
-.node-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.node-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  flex: 0 0 auto;
-  margin-top: 3px;
-  background: radial-gradient(circle at 30% 30%, var(--accent), rgba(56, 189, 248, 0.24));
-  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.16);
-}
-
-.root-node .node-dot {
-  background: radial-gradient(circle at 30% 30%, var(--accent2), rgba(129, 140, 248, 0.24));
-  box-shadow: 0 0 0 5px rgba(129, 140, 248, 0.14);
-}
-
-.node-label {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.25;
-  word-break: normal;
-  overflow-wrap: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.node-actions-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  border-color: rgba(10, 132, 255, 0.35);
+  box-shadow: 0 0 0 1px rgba(10, 132, 255, 0.12), 0 4px 20px rgba(0, 0, 0, 0.40);
 }
 
 /* ── Path highlighting ──────────────────────────────────────────────── */
@@ -913,75 +880,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   50%       { outline-color: rgba(10, 132, 255, 0.90); }
 }
 
-.icon-btn {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-  user-select: none;
-}
-
-.icon-btn:hover {
-  background: var(--panel2);
-  border-color: var(--border);
-  color: var(--text);
-  transform: none;
-}
-
-.icon-btn:active { transform: scale(0.95); }
-
-.add-btn    { color: #0a84ff; }
-.edit-btn   { color: var(--muted); }
-.danger-btn { color: #ff453a; }
-.toggle-btn { color: var(--muted); font-size: 14px; }
-
-.node-designation {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.35;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  overflow: hidden;
-}
-
-.node-meta {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.3;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  overflow: hidden;
-}
-
-.access-badge {
-  width: fit-content;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 3px 8px;
-}
-
-.access-badge.is-public {
-  background: rgba(50, 215, 75, 0.15);
-  color: #32d74b;
-}
-
-.access-badge.is-private {
-  background: rgba(255, 159, 10, 0.15);
-  color: #ff9f0a;
-}
+/* Node badges and meta are now scoped in TreeNode.vue */
 
 .modal-backdrop {
   position: fixed;
@@ -1096,12 +995,11 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   }
 
   .tree-node {
-    border-radius: 14px;
-    padding: 10px 10px 8px;
-    /* mobile breakpoint — keep width in sync with NODE_W responsive override */
+    border-radius: 12px;
+    padding: 10px 10px 10px 12px;
   }
 
-  .icon-btn {
+  .act-btn {
     width: 26px;
     height: 26px;
   }
@@ -1138,16 +1036,10 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
     font-size: 11px;
   }
 
-  .icon-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    font-size: 13px;
-  }
-
-  .access-badge {
-    font-size: 10px;
-    padding: 2px 7px;
+  .act-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
   }
 
   .modal-card {
