@@ -163,8 +163,8 @@ onUnmounted(() => {
   position: relative;
   overflow: hidden;
   padding: 28px 28px 26px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: linear-gradient(130deg, rgba(255, 255, 255, 0.88), rgba(238, 242, 255, 0.9));
+  border: 1px solid var(--c-border, rgba(148, 163, 184, 0.35));
+  background: var(--c-surface, rgba(255, 255, 255, 0.88));
 }
 
 .hero-content {
@@ -190,12 +190,12 @@ onUnmounted(() => {
 .hero-copy h1 {
   font-size: clamp(28px, 4vw, 36px);
   margin-bottom: 6px;
-  color: #0f172a;
+  color: var(--c-text, #0f172a);
   letter-spacing: -0.02em;
 }
 
 .hero-subtitle {
-  color: #475569;
+  color: var(--c-text-2, #475569);
   font-size: 15px;
   line-height: 1.5;
 }
@@ -211,8 +211,8 @@ onUnmounted(() => {
 }
 
 .tree-controls {
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--c-border, rgba(148, 163, 184, 0.3));
+  background: var(--c-surface, rgba(255, 255, 255, 0.92));
   backdrop-filter: blur(10px);
   overflow: visible;
   position: relative;
@@ -253,8 +253,8 @@ onUnmounted(() => {
 }
 
 .panel {
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--c-border, rgba(148, 163, 184, 0.35));
+  background: var(--c-surface, rgba(255, 255, 255, 0.94));
 }
 
 .path-panel :deep(.path-view) {
@@ -267,9 +267,9 @@ onUnmounted(() => {
   gap: 12px;
   padding: 14px 18px;
   border-radius: 14px;
-  background: rgba(248, 250, 252, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  color: #64748b;
+  background: var(--c-surface, rgba(248, 250, 252, 0.9));
+  border: 1px solid var(--c-border, rgba(148, 163, 184, 0.35));
+  color: var(--c-text-2, #64748b);
   font-weight: 600;
   width: fit-content;
 }
@@ -287,7 +287,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 1100px;
   border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid var(--c-border, rgba(148, 163, 184, 0.35));
   box-shadow: 0 24px 50px rgba(15, 23, 42, 0.12);
 }
 
@@ -309,7 +309,7 @@ onUnmounted(() => {
 
 .empty-state p {
   margin-bottom: 16px;
-  color: #64748b;
+  color: var(--c-text-2, #64748b);
 }
 
 .empty-state a {

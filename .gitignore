@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+*.exe
+*.dll
+*.so
+*.dylib
+backups/
+frontend/node_modules/
+.claude
+CLAUDE.md
+DEPLOY.md
+UI_DESIGN_SPEC.md
