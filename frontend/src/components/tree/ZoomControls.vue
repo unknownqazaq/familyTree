@@ -41,10 +41,12 @@ const emit = defineEmits(['zoom-in', 'zoom-out', 'fit', 'reset'])
   right: 20px;
   display: flex;
   flex-direction: column;
-  background: var(--panel, rgba(28, 28, 30, 0.80));
+  background: var(--panel2, rgba(44, 44, 46, 0.90));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 0 0 0.5px var(--border, rgba(255,255,255,0.08));
   padding: 4px;
   gap: 2px;
   z-index: 10;
@@ -53,7 +55,7 @@ const emit = defineEmits(['zoom-in', 'zoom-out', 'fit', 'reset'])
 .ctrl-btn {
   width: 36px;
   height: 36px;
-  border-radius: 4px;
+  border-radius: 8px;
   border: none;
   background: transparent;
   color: var(--text, #ffffff);
@@ -61,9 +63,14 @@ const emit = defineEmits(['zoom-in', 'zoom-out', 'fit', 'reset'])
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.1s;
 }
-.ctrl-btn:hover { background: var(--panel2, rgba(44, 44, 46, 0.90)); }
+.ctrl-btn:hover {
+  background: var(--panel, rgba(28, 28, 30, 0.80));
+}
+.ctrl-btn:active {
+  transform: scale(0.92);
+}
 
 .divider { height: 1px; background: var(--border, rgba(255, 255, 255, 0.08)); margin: 2px 4px; }
 </style>

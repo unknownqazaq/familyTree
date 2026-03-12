@@ -595,9 +595,9 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 /* Light mode tree */
 [data-theme="light"] .tree-view {
   --bg:         #f2f2f7;
-  --panel:      rgba(255, 255, 255, 0.80);
-  --panel2:     rgba(255, 255, 255, 0.95);
-  --border:     rgba(60, 60, 67, 0.12);
+  --panel:      rgba(255, 255, 255, 0.85);
+  --panel2:     rgba(255, 255, 255, 0.98);
+  --border:     rgba(60, 60, 67, 0.18);
   --text:       #000000;
   --muted:      rgba(60, 60, 67, 0.55);
   --shadow:     0 18px 45px rgba(0, 0, 0, 0.10);
