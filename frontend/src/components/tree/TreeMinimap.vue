@@ -1,4 +1,5 @@
 <template>
+  <Teleport to="body">
   <div class="minimap" :class="{ 'is-collapsed': collapsed }" :title="toggleLabel">
     <button class="minimap-toggle" @click="collapsed = !collapsed" :aria-label="toggleLabel">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -22,6 +23,7 @@
       </div>
     </Transition>
   </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -134,10 +136,10 @@ function handleHover() {
 
 <style scoped>
 .minimap {
-  position: absolute;
+  position: fixed;
   bottom: 20px;
   left: 20px;
-  z-index: 10;
+  z-index: 9999;
   background: var(--panel, rgba(28, 28, 30, 0.80));
   border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
   border-radius: 12px;
@@ -203,5 +205,14 @@ function handleHover() {
 .minimap-body-leave-to {
   opacity: 0;
   max-height: 0;
+}
+
+/* Light theme — variables don't cascade through Teleport */
+[data-theme="light"] .minimap {
+  --panel: rgba(255, 255, 255, 0.85);
+  --panel2: rgba(255, 255, 255, 0.98);
+  --border: rgba(60, 60, 67, 0.18);
+  --text: #000000;
+  --muted: rgba(60, 60, 67, 0.55);
 }
 </style>

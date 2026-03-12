@@ -1,6 +1,6 @@
 <template>
   <div class="tree-page">
-    <section class="tree-hero card fade-up">
+    <section v-if="treeStore.persons.length === 0" class="tree-hero card fade-up">
       <div class="hero-content">
         <div class="hero-copy">
           <p class="hero-kicker">{{ t('tree.heroKicker') }}</p>
