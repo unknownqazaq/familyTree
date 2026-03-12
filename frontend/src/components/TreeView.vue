@@ -1,18 +1,19 @@
 ﻿<template>
   <div ref="treeViewRef" class="tree-view card" :class="{ 'is-fullscreen': isFullscreen }">
     <div class="tree-header">
-      <div class="header-copy">
-        <h2>{{ t('treeMap.title') }}</h2>
-        <p>{{ t('treeMap.hint') }}</p>
-      </div>
-      <div class="header-controls">
-        <button type="button" class="btn-secondary control-btn" @click="centerTree('smooth')">
-          {{ t('treeMap.center') }}
+      <h2 class="header-title">{{ t('treeMap.title') }}</h2>
+      <span class="stats-pill" aria-live="polite" aria-atomic="true">{{ persons.length }}</span>
+      <span class="header-spacer"></span>
+      <div class="header-actions">
+        <button type="button" class="hdr-btn" :title="t('treeMap.hint')" @click="centerTree('smooth')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+          <span class="hdr-btn-label">{{ t('treeMap.center') }}</span>
         </button>
-        <button type="button" class="btn-secondary control-btn" @click="toggleFullscreen">
-          {{ isFullscreen ? t('treeMap.fullscreenExit') : t('treeMap.fullscreenEnter') }}
+        <button type="button" class="hdr-btn" @click="toggleFullscreen">
+          <svg v-if="!isFullscreen" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6m10-10h-6V4M4 10h6V4m10 10h-6v6"/></svg>
+          <span class="hdr-btn-label">{{ isFullscreen ? t('treeMap.fullscreenExit') : t('treeMap.fullscreenEnter') }}</span>
         </button>
-        <span class="stats-pill" aria-live="polite" aria-atomic="true">{{ t('treeMap.nodesCount', { count: persons.length }) }}</span>
       </div>
     </div>
 
@@ -634,70 +635,94 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   height: calc(100vh - 120px);
 }
 
+/* ── Tree header toolbar ─────────────────────────────────────────────────── */
 .tree-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 6px 6px 12px;
-}
-
-.header-copy h3 {
-  margin: 0;
-  font-size: 18px;
-  letter-spacing: 0.2px;
-  color: var(--text);
-}
-
-.header-copy p {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.35;
-}
-
-.header-controls {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  padding: 4px 4px 10px;
 }
 
-.header-controls .control-btn {
-  border: 1px solid var(--border);
-  background: var(--panel);
+.header-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
   color: var(--text);
-  border-radius: 10px;
-  min-height: 36px;
-  padding: 8px 14px;
-  box-shadow: none;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.header-controls .control-btn:hover {
-  background: var(--panel2);
-  border-color: var(--border);
-  opacity: 1;
-  transform: none;
-}
-
-.header-controls .control-btn:active {
-  transform: translateY(0);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .stats-pill {
   display: inline-flex;
   align-items: center;
-  font-size: 12px;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--muted);
+  background: var(--panel2);
   border: 1px solid var(--border);
-  background: var(--panel);
-  padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: 6px;
+  padding: 0 6px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.header-spacer {
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hdr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
   letter-spacing: -0.01em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.hdr-btn svg {
+  stroke: var(--muted);
+  flex-shrink: 0;
+  transition: stroke 0.15s;
+}
+
+.hdr-btn:hover {
+  background: var(--panel);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.hdr-btn:hover svg {
+  stroke: var(--text);
+}
+
+.hdr-btn:active {
+  transform: scale(0.97);
+}
+
+[data-theme="light"] .hdr-btn:hover {
+  background: rgba(60, 60, 67, 0.06);
+  border-color: rgba(60, 60, 67, 0.18);
+}
+[data-theme="light"] .hdr-btn:hover svg {
+  stroke: #000;
 }
 
 .tree-viewport {
@@ -847,11 +872,10 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 [data-theme="light"] .modal-card h4 { color: #000; }
 [data-theme="light"] .form-label label { color: rgba(60, 60, 67, 0.80); }
-[data-theme="light"] .control-btn { background: rgba(60,60,67,0.06); }
-[data-theme="light"] .control-btn:hover { background: rgba(60,60,67,0.10) !important; }
 [data-theme="light"] .stats-pill {
-  border-color: rgba(60, 60, 67, 0.14);
-  background: rgba(60, 60, 67, 0.04);
+  border-color: rgba(60, 60, 67, 0.12);
+  background: rgba(60, 60, 67, 0.05);
+  color: rgba(60, 60, 67, 0.55);
 }
 [data-theme="light"] .tree-viewport { background: var(--bg); }
 
@@ -968,25 +992,12 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
     padding: 14px 12px 10px;
   }
 
-  .tree-header {
-    flex-direction: column;
-    gap: 10px;
-    padding: 4px 4px 10px;
+  .hdr-btn-label {
+    display: none;
   }
 
-  .header-copy p {
-    font-size: 12.5px;
-  }
-
-  .header-controls {
-    width: 100%;
-    gap: 8px;
-  }
-
-  .header-controls .control-btn,
-  .stats-pill {
-    width: 100%;
-    justify-content: center;
+  .hdr-btn {
+    padding: 0 8px;
   }
 
   .tree-viewport {
@@ -1014,26 +1025,12 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
     padding: 12px 10px 8px;
   }
 
-  .header-copy h3 {
-    font-size: 16px;
-  }
-
-  .header-copy p {
-    font-size: 12px;
-    line-height: 1.3;
+  .header-title {
+    font-size: 13px;
   }
 
   .tree-viewport {
     height: 400px;
-  }
-
-  .node-label {
-    font-size: 14px;
-  }
-
-  .node-designation,
-  .node-meta {
-    font-size: 11px;
   }
 
   .act-btn {
@@ -1063,15 +1060,16 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
     height: 340px;
   }
 
-  .header-controls .control-btn {
-    min-height: 34px;
-    padding: 8px 10px;
-    font-size: 12px;
+  .hdr-btn {
+    height: 28px;
+    padding: 0 6px;
   }
 
   .stats-pill {
-    font-size: 11px;
-    padding: 7px 9px;
+    font-size: 10px;
+    height: 18px;
+    min-width: 18px;
+    padding: 0 5px;
   }
 }
 </style>
