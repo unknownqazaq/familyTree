@@ -73,15 +73,16 @@ watchEffect(() => {
   const ctx = c.getContext('2d')
   const { scale, offsetX, offsetY } = getScale()
 
-  // Background
+  // Background – read theme from DOM
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
   ctx.clearRect(0, 0, W, H)
-  ctx.fillStyle = 'rgba(241, 245, 249, 0.95)'
+  ctx.fillStyle = isDark ? 'rgba(28, 28, 30, 0.95)' : 'rgba(241, 245, 249, 0.95)'
   ctx.fillRect(0, 0, W, H)
 
   // Subtle scene boundary
   const sw = props.sceneWidth * scale
   const sh = props.sceneHeight * scale
-  ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)'
+  ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(148, 163, 184, 0.3)'
   ctx.lineWidth = 1
   ctx.strokeRect(offsetX, offsetY, sw, sh)
 
@@ -137,8 +138,8 @@ function handleHover() {
   bottom: 20px;
   left: 20px;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: var(--c-surface, rgba(255, 255, 255, 0.92));
+  border: 1px solid var(--c-border, rgba(148, 163, 184, 0.4));
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
   backdrop-filter: blur(8px);
@@ -159,9 +160,9 @@ function handleHover() {
   padding: 7px 10px;
   background: none;
   border: none;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+  border-bottom: 1px solid var(--c-border, rgba(226, 232, 240, 0.7));
   cursor: pointer;
-  color: #64748b;
+  color: var(--c-text-2, #64748b);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -175,8 +176,8 @@ function handleHover() {
 }
 
 .minimap-toggle:hover {
-  background: rgba(241, 245, 249, 0.8);
-  color: #334155;
+  background: var(--c-bg-3, rgba(241, 245, 249, 0.8));
+  color: var(--c-text, #334155);
   transform: none;
 }
 
