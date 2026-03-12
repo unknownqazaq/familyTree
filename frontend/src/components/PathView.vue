@@ -46,8 +46,8 @@ const { t } = useI18n()
 }
 
 .path-node {
-  background: #dae8fc;
-  border: 2px solid #6c8ebf;
+  background: var(--c-primary-glow);
+  border: 2px solid var(--c-primary);
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
@@ -57,12 +57,12 @@ const { t } = useI18n()
 }
 
 .path-node:hover {
-  background: #b4d3f5;
+  background: var(--c-primary-glow);
 }
 
 .path-arrow {
   font-size: 20px;
-  color: #888;
+  color: var(--c-text-3);
 }
 
 .path-error {

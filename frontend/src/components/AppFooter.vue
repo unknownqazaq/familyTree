@@ -19,8 +19,8 @@ const year = new Date().getFullYear()
 
 <style scoped>
 .app-footer {
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
-  background: rgba(248, 250, 252, 0.9);
+  border-top: 1px solid var(--c-border);
+  background: var(--c-surface);
   padding: 16px 24px;
   margin-top: auto;
 }
@@ -37,7 +37,7 @@ const year = new Date().getFullYear()
 
 .footer-copy {
   font-size: 13px;
-  color: #64748b;
+  color: var(--c-text-2);
 }
 
 .footer-links {
@@ -47,12 +47,12 @@ const year = new Date().getFullYear()
 
 .footer-links a {
   font-size: 13px;
-  color: #64748b;
+  color: var(--c-text-2);
   text-decoration: none;
   transition: color 0.15s;
 }
 
 .footer-links a:hover {
-  color: #4f46e5;
+  color: var(--c-indigo-d);
 }
 </style>

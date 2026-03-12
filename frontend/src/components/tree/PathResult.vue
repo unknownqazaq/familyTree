@@ -26,7 +26,7 @@ const emit = defineEmits(['close', 'navigate-to'])
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #D4E6F1;
+  background: var(--c-primary-glow);
   border-radius: 8px;
   padding: 12px 16px;
   margin-bottom: 8px;
@@ -40,7 +40,7 @@ const emit = defineEmits(['close', 'navigate-to'])
   flex: 1;
 }
 
-.path-label { font-size: 13px; font-weight: 600; color: #1A5276; white-space: nowrap; }
+.path-label { font-size: 13px; font-weight: 600; color: var(--c-primary-d); white-space: nowrap; }
 
 .path-chips {
   display: flex;
@@ -50,29 +50,29 @@ const emit = defineEmits(['close', 'navigate-to'])
 }
 
 .path-chip {
-  background: #fff;
+  background: var(--c-bg-2);
   border-radius: 4px;
   padding: 4px 12px;
   font-size: 13px;
-  color: #1C2833;
+  color: var(--c-text);
   cursor: pointer;
-  border: 1px solid #AEB6BF;
+  border: 1px solid var(--c-border);
   transition: box-shadow 0.15s;
 }
-.path-chip:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.path-chip:hover { box-shadow: 0 1px 3px var(--c-shadow); }
 
-.path-arrow { color: #5D6D7E; font-size: 14px; }
-.path-steps { font-size: 12px; color: #5D6D7E; white-space: nowrap; }
+.path-arrow { color: var(--c-text-2); font-size: 14px; }
+.path-steps { font-size: 12px; color: var(--c-text-2); white-space: nowrap; }
 
 .close-btn {
   background: none;
   border: none;
-  color: #5D6D7E;
+  color: var(--c-text-2);
   cursor: pointer;
   font-size: 14px;
   padding: 4px 8px;
   border-radius: 4px;
   flex-shrink: 0;
 }
-.close-btn:hover { background: rgba(0,0,0,0.08); }
+.close-btn:hover { background: var(--c-fill-3); }
 </style>

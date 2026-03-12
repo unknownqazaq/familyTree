@@ -182,7 +182,7 @@ onUnmounted(() => {
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6366f1;
+  color: var(--c-indigo, #6366f1);
   font-weight: 700;
   margin-bottom: 6px;
 }
@@ -278,7 +278,7 @@ onUnmounted(() => {
   width: 12px;
   height: 12px;
   border-radius: 999px;
-  background: #6366f1;
+  background: var(--c-indigo, #6366f1);
   box-shadow: 0 0 0 rgba(99, 102, 241, 0.35);
   animation: pulse 1.6s infinite;
 }
@@ -288,7 +288,7 @@ onUnmounted(() => {
   max-width: 1100px;
   border-radius: 20px;
   border: 1px solid var(--c-border, rgba(148, 163, 184, 0.35));
-  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 24px 50px var(--c-shadow, rgba(15, 23, 42, 0.12));
 }
 
 .tree-graph {

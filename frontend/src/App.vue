@@ -63,6 +63,25 @@ useTheme()
   --c-yellow:      #ffd60a;
   --c-orange:      #ff9f0a;
 
+  /* Accent — Gold */
+  --c-gold:        #d4a646;
+  --c-gold-d:      #b8922e;
+
+  /* Status badges */
+  --c-badge-green-bg:  rgba(50, 215, 75, 0.18);
+  --c-badge-green-text: #32d74b;
+  --c-badge-yellow-bg: rgba(255, 214, 10, 0.18);
+  --c-badge-yellow-text: #ffd60a;
+
+  /* Indigo accent */
+  --c-indigo:      #6366f1;
+  --c-indigo-d:    #4f46e5;
+  --c-indigo-glow: rgba(99, 102, 241, 0.25);
+
+  /* Step / progress */
+  --c-step-done:   #32d74b;
+  --c-step-connector: rgba(120, 120, 128, 0.28);
+
   /* Surface / glass */
   --c-surface:     rgba(28, 28, 30, 0.80);
   --c-surface-2:   rgba(44, 44, 46, 0.85);
@@ -106,6 +125,21 @@ useTheme()
   --c-green:       #34c759;
   --c-yellow:      #ffcc00;
   --c-orange:      #ff9500;
+
+  --c-gold:        #C9A96E;
+  --c-gold-d:      #b8922e;
+
+  --c-badge-green-bg:  #d5f5e3;
+  --c-badge-green-text: #1e8449;
+  --c-badge-yellow-bg: #fef9e7;
+  --c-badge-yellow-text: #b7950b;
+
+  --c-indigo:      #6366f1;
+  --c-indigo-d:    #4f46e5;
+  --c-indigo-glow: rgba(99, 102, 241, 0.18);
+
+  --c-step-done:   #34c759;
+  --c-step-connector: rgba(120, 120, 128, 0.20);
 
   --c-surface:     rgba(255, 255, 255, 0.82);
   --c-surface-2:   rgba(242, 242, 247, 0.88);

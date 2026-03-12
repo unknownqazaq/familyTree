@@ -35,8 +35,8 @@ function formatNumber(n) {
 
 <style scoped>
 .stats-bar {
-  background: #1A5276;
-  color: #fff;
+  background: var(--c-primary-d);
+  color: var(--c-bg-2);
   padding: 32px 24px;
   width: 100%;
 }
@@ -61,7 +61,7 @@ function formatNumber(n) {
 .stat-label {
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255,255,255,0.7);
+  color: var(--c-text-2);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -69,7 +69,7 @@ function formatNumber(n) {
 .stat-divider {
   width: 1px;
   height: 48px;
-  background: rgba(255,255,255,0.15);
+  background: var(--c-sep-opaque);
 }
 
 @media (max-width: 600px) {

@@ -62,13 +62,13 @@ const accessLabel = computed(() =>
 }
 
 .badge-public {
-  background: #d4edda;
-  color: #155724;
+  background: var(--c-badge-green-bg);
+  color: var(--c-badge-green-text);
 }
 
 .badge-private {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--c-badge-yellow-bg);
+  color: var(--c-badge-yellow-text);
 }
 
 .person-field {
@@ -87,7 +87,7 @@ const accessLabel = computed(() =>
   padding: 6px 14px;
   border-radius: 4px;
   font-size: 13px;
-  color: white;
+  color: var(--c-bg-2);
   text-decoration: none;
 }
 </style>

@@ -133,17 +133,17 @@ function formatSize(bytes) {
 .backup-list td {
   text-align: left;
   padding: 10px 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--c-border);
   font-size: 14px;
 }
 
 .backup-list th {
   font-weight: 600;
-  color: #666;
+  color: var(--c-text-2);
 }
 
 .empty-text {
-  color: #888;
+  color: var(--c-text-3);
   font-size: 14px;
 }
 </style>

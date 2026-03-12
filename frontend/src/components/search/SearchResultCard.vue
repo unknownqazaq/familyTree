@@ -47,18 +47,18 @@ function goToProfile() {
   align-items: flex-start;
   gap: 16px;
   padding: 16px;
-  border-bottom: 1px solid #EAECEE;
+  border-bottom: 1px solid var(--c-border);
   cursor: pointer;
   transition: background 0.15s;
 }
-.result-card:hover { background: #F4F6F7; }
+.result-card:hover { background: var(--c-fill-3); }
 
 .card-avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #EAECEE;
-  color: #1A5276;
+  background: var(--c-fill-3);
+  color: var(--c-primary-d);
   font-size: 16px;
   font-weight: 700;
   display: flex;
@@ -84,7 +84,7 @@ function goToProfile() {
   margin-bottom: 4px;
 }
 
-.person-name { font-size: 15px; font-weight: 600; color: #1C2833; }
+.person-name { font-size: 15px; font-weight: 600; color: var(--c-text); }
 
 .badge {
   border-radius: 2px;
@@ -92,14 +92,14 @@ function goToProfile() {
   font-size: 11px;
   font-weight: 500;
 }
-.badge-public  { background: #D5F5E3; color: #1E8449; }
-.badge-private { background: #FEF9E7; color: #B7950B; }
+.badge-public  { background: var(--c-badge-green-bg); color: var(--c-badge-green-text); }
+.badge-private { background: var(--c-badge-yellow-bg); color: var(--c-badge-yellow-text); }
 
-.lineage     { font-size: 13px; color: #5D6D7E; margin-bottom: 2px; }
-.designation { font-size: 13px; color: #5D6D7E; }
+.lineage     { font-size: 13px; color: var(--c-text-2); margin-bottom: 2px; }
+.designation { font-size: 13px; color: var(--c-text-2); }
 .excerpt {
   font-size: 13px;
-  color: #AEB6BF;
+  color: var(--c-text-3);
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -116,8 +116,8 @@ function goToProfile() {
 
 .btn-ghost {
   background: transparent;
-  color: #2980B9;
-  border: 1px solid #D5D8DC;
+  color: var(--c-primary);
+  border: 1px solid var(--c-sep-opaque);
   border-radius: 4px;
   padding: 4px 12px;
   font-size: 13px;
@@ -125,5 +125,5 @@ function goToProfile() {
   white-space: nowrap;
   transition: background 0.15s;
 }
-.btn-ghost:hover { background: #D4E6F1; }
+.btn-ghost:hover { background: var(--c-primary-glow); }
 </style>

@@ -106,8 +106,8 @@ async function publish(id) {
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
-  background: #fff3cd;
-  color: #856404;
+  background: var(--c-badge-yellow-bg);
+  color: var(--c-badge-yellow-text);
 }
 
 .field {
@@ -132,7 +132,7 @@ async function publish(id) {
 .loading {
   text-align: center;
   padding: 40px;
-  color: #888;
+  color: var(--c-text-3);
 }
 
 .empty-wrapper {

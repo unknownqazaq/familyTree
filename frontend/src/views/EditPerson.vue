@@ -430,8 +430,8 @@ async function handleDelete() {
 
 .excel-tools {
   margin-bottom: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
 }
 
 .excel-tools h3 {
@@ -439,7 +439,7 @@ async function handleDelete() {
 }
 
 .excel-tools p {
-  color: #475569;
+  color: var(--c-text-2);
   font-size: 14px;
   margin-bottom: 12px;
 }
@@ -458,7 +458,7 @@ async function handleDelete() {
 .excel-notes {
   margin: 0;
   padding-left: 18px;
-  color: #64748b;
+  color: var(--c-text-2);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -468,17 +468,17 @@ async function handleDelete() {
 }
 
 .danger-zone {
-  border: 1px solid #e74c3c;
+  border: 1px solid var(--c-red);
 }
 
 .danger-zone h3 {
-  color: #e74c3c;
+  color: var(--c-red);
   margin-bottom: 8px;
 }
 
 .danger-zone p {
   font-size: 14px;
-  color: #666;
+  color: var(--c-text-2);
   margin-bottom: 12px;
 }
 </style>

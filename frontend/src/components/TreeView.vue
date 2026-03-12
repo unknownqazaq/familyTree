@@ -588,7 +588,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  background: #000;
+  background: var(--bg);
   color: var(--text);
 }
 
@@ -604,7 +604,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   --line-color: rgba(60, 60, 67, 0.18);
   --accent:     #007aff;
   --accent2:    #0062cc;
-  background: #f2f2f7;
+  background: var(--bg);
 }
 
 /* (dark is now the default — no overrides needed) */
@@ -665,7 +665,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 
 .header-controls .control-btn {
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--panel);
   color: var(--text);
   border-radius: 10px;
   min-height: 36px;
@@ -678,8 +678,8 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .header-controls .control-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--panel2);
+  border-color: var(--border);
   opacity: 1;
   transform: none;
 }
@@ -693,8 +693,8 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   align-items: center;
   font-size: 12px;
   color: var(--muted);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  background: var(--panel);
   padding: 6px 12px;
   border-radius: 999px;
   letter-spacing: -0.01em;
@@ -708,8 +708,8 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   touch-action: none;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: #0a0a0a;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  background: var(--bg);
+  box-shadow: inset 0 1px 0 var(--border);
 }
 
 .tree-viewport.is-dragging {
@@ -786,8 +786,8 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   box-sizing: border-box !important;
   overflow: hidden;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(28, 28, 30, 0.88);
+  border: 1px solid var(--border);
+  background: var(--panel);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.50);
   padding: 14px 16px;
   display: flex;
@@ -800,7 +800,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 .tree-node:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55);
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: var(--border);
 }
 
 /* Light-mode node overrides */
@@ -845,7 +845,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   border-color: rgba(60, 60, 67, 0.14);
   background: rgba(60, 60, 67, 0.04);
 }
-[data-theme="light"] .tree-viewport { background: rgba(242, 242, 247, 0.80); }
+[data-theme="light"] .tree-viewport { background: var(--bg); }
 
 /* Positions snap immediately so re-layout never creates a visible overlap window.
    Only hover-lift (transform) and shadow get a visual transition. */
@@ -919,9 +919,9 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   display: grid;
   place-items: center;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  background: rgba(255, 255, 255, 0.07);
-  color: rgba(235, 235, 245, 0.70);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
@@ -931,21 +931,21 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .icon-btn:hover {
-  background: rgba(255, 255, 255, 0.13);
-  border-color: rgba(255, 255, 255, 0.18);
-  color: #fff;
+  background: var(--panel2);
+  border-color: var(--border);
+  color: var(--text);
   transform: none;
 }
 
 .icon-btn:active { transform: scale(0.95); }
 
 .add-btn    { color: #0a84ff; }
-.edit-btn   { color: rgba(235, 235, 245, 0.80); }
+.edit-btn   { color: var(--muted); }
 .danger-btn { color: #ff453a; }
-.toggle-btn { color: rgba(235, 235, 245, 0.55); font-size: 14px; }
+.toggle-btn { color: var(--muted); font-size: 14px; }
 
 .node-designation {
-  color: rgba(235, 235, 245, 0.55);
+  color: var(--muted);
   font-size: 12px;
   line-height: 1.35;
   white-space: normal;
@@ -999,17 +999,17 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
   max-height: calc(100vh - 60px);
   overflow-y: auto;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  background: rgba(28, 28, 30, 0.96);
+  border: 1px solid var(--border);
+  background: var(--panel2);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: 0 0 0 0.5px rgba(255,255,255,0.06), 0 30px 60px rgba(0, 0, 0, 0.70);
+  box-shadow: var(--shadow);
   padding: 20px;
 }
 
 .modal-card h4 {
   margin: 0 0 14px;
-  color: #ffffff;
+  color: var(--text);
   font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.012em;
@@ -1026,7 +1026,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .form-label label {
-  color: rgba(235, 235, 245, 0.70);
+  color: var(--muted);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -1039,7 +1039,7 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 }
 
 .modal-delete p {
-  color: #334155;
+  color: var(--text);
   margin-bottom: 14px;
 }
 

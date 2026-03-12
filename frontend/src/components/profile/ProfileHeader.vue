@@ -47,12 +47,12 @@ function formatDate(d) {
 
 <style scoped>
 .profile-header-card {
-  background: #fff;
-  border: 1px solid #EAECEE;
-  border-bottom: 3px solid #C9A96E;
+  background: var(--c-bg-2);
+  border: 1px solid var(--c-border);
+  border-bottom: 3px solid var(--c-gold);
   border-radius: 8px;
   padding: 32px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px var(--c-shadow);
 }
 
 .header-flex {
@@ -66,8 +66,8 @@ function formatDate(d) {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: #EAECEE;
-  color: #1A5276;
+  background: var(--c-fill-3);
+  color: var(--c-primary-d);
   font-size: 24px;
   font-weight: 700;
   display: flex;
@@ -86,7 +86,7 @@ function formatDate(d) {
   margin-bottom: 6px;
 }
 
-h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
+h1 { font-size: 28px; font-weight: 700; color: var(--c-text); }
 
 .badge {
   border-radius: 2px;
@@ -94,11 +94,11 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
   font-size: 12px;
   font-weight: 500;
 }
-.badge-public  { background: #D5F5E3; color: #1E8449; }
-.badge-private { background: #FEF9E7; color: #B7950B; }
+.badge-public  { background: var(--c-badge-green-bg); color: var(--c-badge-green-text); }
+.badge-private { background: var(--c-badge-yellow-bg); color: var(--c-badge-yellow-text); }
 
-.designation { font-size: 15px; color: #5D6D7E; margin-bottom: 4px; }
-.meta        { font-size: 12px; color: #AEB6BF; }
+.designation { font-size: 15px; color: var(--c-text-2); margin-bottom: 4px; }
+.meta        { font-size: 12px; color: var(--c-text-3); }
 
 .actions {
   display: flex;
@@ -110,8 +110,8 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
 
 .btn-primary {
   display: inline-block;
-  background: #1A5276;
-  color: #fff;
+  background: var(--c-primary-d);
+  color: var(--c-bg-2);
   border-radius: 4px;
   padding: 8px 20px;
   font-size: 14px;
@@ -120,13 +120,13 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
   border: none;
   cursor: pointer;
 }
-.btn-primary:hover { background: #154360; }
+.btn-primary:hover { background: var(--c-primary-d); filter: brightness(0.9); }
 
 .btn-secondary {
   display: inline-block;
   background: transparent;
-  color: #2C3E50;
-  border: 1px solid #D5D8DC;
+  color: var(--c-text);
+  border: 1px solid var(--c-sep-opaque);
   border-radius: 4px;
   padding: 8px 20px;
   font-size: 14px;
@@ -134,5 +134,5 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
   text-decoration: none;
   cursor: pointer;
 }
-.btn-secondary:hover { background: #EAECEE; }
+.btn-secondary:hover { background: var(--c-fill-3); }
 </style>

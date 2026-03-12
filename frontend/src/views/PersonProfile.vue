@@ -51,7 +51,7 @@
         <div class="card mini-tree-card">
           <h4 class="mini-tree-title">Family Tree Context</h4>
           <div class="mini-tree-placeholder">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#AEB6BF" stroke-width="1.5">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -144,23 +144,23 @@ onMounted(async () => {
   gap: 8px;
   margin-bottom: 20px;
   font-size: 13px;
-  color: #AEB6BF;
+  color: var(--c-text-3);
 }
-.breadcrumb a { color: #2980B9; text-decoration: none; }
+.breadcrumb a { color: var(--c-primary); text-decoration: none; }
 .breadcrumb a:hover { text-decoration: underline; }
-.sep { color: #D5D8DC; }
-.current { color: #1C2833; font-weight: 500; }
+.sep { color: var(--c-sep-opaque); }
+.current { color: var(--c-text); font-weight: 500; }
 
 .card {
-  background: #fff;
-  border: 1px solid #EAECEE;
+  background: var(--c-bg-2);
+  border: 1px solid var(--c-border);
   border-radius: 8px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px var(--c-shadow);
 }
 
 .profile-header {
-  border-bottom: 3px solid #C9A96E;
+  border-bottom: 3px solid var(--c-gold);
   margin-bottom: 24px;
 }
 
@@ -175,8 +175,8 @@ onMounted(async () => {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: #EAECEE;
-  color: #1A5276;
+  background: var(--c-fill-3);
+  color: var(--c-primary-d);
   font-size: 24px;
   font-weight: 700;
   display: flex;
@@ -194,7 +194,7 @@ onMounted(async () => {
   margin-bottom: 6px;
 }
 
-h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
+h1 { font-size: 28px; font-weight: 700; color: var(--c-text); }
 
 .badge {
   border-radius: 2px;
@@ -202,11 +202,11 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
   font-size: 12px;
   font-weight: 500;
 }
-.badge-public  { background: #D5F5E3; color: #1E8449; }
-.badge-private { background: #FEF9E7; color: #B7950B; }
+.badge-public  { background: var(--c-badge-green-bg); color: var(--c-badge-green-text); }
+.badge-private { background: var(--c-badge-yellow-bg); color: var(--c-badge-yellow-text); }
 
-.designation { font-size: 15px; color: #5D6D7E; margin-bottom: 4px; }
-.meta { font-size: 12px; color: #AEB6BF; }
+.designation { font-size: 15px; color: var(--c-text-2); margin-bottom: 4px; }
+.meta { font-size: 12px; color: var(--c-text-3); }
 
 .header-actions {
   display: flex;
@@ -217,8 +217,8 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
 
 .btn-primary {
   display: inline-block;
-  background: #1A5276;
-  color: #fff;
+  background: var(--c-primary-d);
+  color: var(--c-bg-2);
   border: none;
   border-radius: 4px;
   padding: 8px 20px;
@@ -227,13 +227,13 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
   cursor: pointer;
   text-decoration: none;
 }
-.btn-primary:hover { background: #154360; }
+.btn-primary:hover { opacity: 0.9; }
 
 .btn-secondary {
   display: inline-block;
   background: transparent;
-  color: #2C3E50;
-  border: 1px solid #D5D8DC;
+  color: var(--c-text);
+  border: 1px solid var(--c-sep-opaque);
   border-radius: 4px;
   padding: 8px 20px;
   font-size: 14px;
@@ -241,11 +241,11 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
   cursor: pointer;
   text-decoration: none;
 }
-.btn-secondary:hover { background: #EAECEE; }
+.btn-secondary:hover { background: var(--c-fill-3); }
 
 .btn-ghost {
   background: transparent;
-  color: #2980B9;
+  color: var(--c-primary);
   border: none;
   padding: 0;
   font-size: 14px;
@@ -265,7 +265,7 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
 .info-field {
   margin-bottom: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #EAECEE;
+  border-bottom: 1px solid var(--c-border);
 }
 .info-field:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
 
@@ -275,14 +275,14 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #5D6D7E;
+  color: var(--c-text-2);
   margin-bottom: 6px;
 }
-.field-value { font-size: 15px; color: #2C3E50; line-height: 1.6; }
-.no-info { font-size: 14px; color: #AEB6BF; font-style: italic; }
+.field-value { font-size: 15px; color: var(--c-text); line-height: 1.6; }
+.no-info { font-size: 14px; color: var(--c-text-3); font-style: italic; }
 
 .mini-tree-card { display: flex; flex-direction: column; }
-.mini-tree-title { font-size: 14px; font-weight: 600; color: #1C2833; margin-bottom: 16px; }
+.mini-tree-title { font-size: 14px; font-weight: 600; color: var(--c-text); margin-bottom: 16px; }
 
 .mini-tree-placeholder {
   display: flex;
@@ -290,9 +290,9 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
   align-items: center;
   gap: 8px;
   padding: 32px;
-  background: #F4F6F7;
+  background: var(--c-fill-3);
   border-radius: 6px;
-  color: #AEB6BF;
+  color: var(--c-text-3);
   font-size: 13px;
   margin-bottom: 16px;
 }
@@ -308,12 +308,12 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #5D6D7E;
+  color: var(--c-text-2);
   margin-bottom: 12px;
 }
 
 .children-list { display: flex; flex-direction: column; gap: 8px; }
-.no-relation { font-size: 13px; color: #AEB6BF; font-style: italic; }
+.no-relation { font-size: 13px; color: var(--c-text-3); font-style: italic; }
 
 .loading-state {
   display: flex;
@@ -324,8 +324,8 @@ h1 { font-size: 28px; font-weight: 700; color: #1C2833; }
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #EAECEE;
-  border-top-color: #1A5276;
+  border: 3px solid var(--c-fill-3);
+  border-top-color: var(--c-primary-d);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

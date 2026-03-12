@@ -139,20 +139,20 @@ const defaultActionLabel = computed(() => {
 
 .empty-illustration {
   margin-bottom: 8px;
-  filter: drop-shadow(0 4px 12px rgba(15, 23, 42, 0.08));
+  filter: drop-shadow(0 4px 12px var(--c-shadow));
 }
 
 .empty-title {
   font-size: 20px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--c-text);
   line-height: 1.3;
   margin: 0;
 }
 
 .empty-body {
   font-size: 14px;
-  color: #64748b;
+  color: var(--c-text-2);
   line-height: 1.65;
   margin: 0;
   max-width: 340px;

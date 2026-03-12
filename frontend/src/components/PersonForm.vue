@@ -342,8 +342,8 @@ function onSubmit() {
 .selected-parent {
   margin-top: 8px;
   padding: 8px 12px;
-  background: #eef2ff;
-  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: var(--c-indigo-glow);
+  border: 1px solid var(--c-border);
   border-radius: 10px;
   font-size: 13px;
   display: inline-flex;
@@ -354,7 +354,7 @@ function onSubmit() {
 .btn-remove {
   background: none;
   border: none;
-  color: #e74c3c;
+  color: var(--c-red);
   font-size: 18px;
   padding: 0 4px;
   cursor: pointer;
@@ -368,14 +368,14 @@ function onSubmit() {
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: #ef4444;
+  color: var(--c-red);
 }
 
 .form-group.has-error input,
 .form-group.has-error textarea,
 .form-group.has-error select {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+  border-color: var(--c-red);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-red) 14%, transparent);
 }
 
 /* ── Stepper wrapper ─────────────────────────────────────────────────────── */
@@ -403,9 +403,9 @@ function onSubmit() {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  border: 2px solid #cbd5e1;
-  background: #f8fafc;
-  color: #94a3b8;
+  border: 2px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text-3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -416,30 +416,30 @@ function onSubmit() {
 }
 
 .step-item.is-active .step-bubble {
-  border-color: #6366f1;
-  background: #6366f1;
+  border-color: var(--c-indigo);
+  background: var(--c-indigo);
   color: #fff;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 0 4px var(--c-indigo-glow);
 }
 
 .step-item.is-done .step-bubble {
-  border-color: #10b981;
-  background: #10b981;
+  border-color: var(--c-step-done);
+  background: var(--c-step-done);
   color: #fff;
 }
 
 .step-label {
   font-size: 11px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--c-text-3);
   margin-top: 6px;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.step-item.is-active .step-label { color: #4f46e5; }
-.step-item.is-done  .step-label  { color: #059669; }
+.step-item.is-active .step-label { color: var(--c-indigo-d); }
+.step-item.is-done  .step-label  { color: var(--c-step-done); }
 
 .step-connector {
   position: absolute;
@@ -447,12 +447,12 @@ function onSubmit() {
   left: calc(50% + 16px);
   right: calc(-50% + 16px);
   height: 2px;
-  background: #e2e8f0;
+  background: var(--c-step-connector);
   transition: background 0.3s;
   z-index: 0;
 }
 
-.step-connector.is-done { background: #10b981; }
+.step-connector.is-done { background: var(--c-step-done); }
 
 /* ── Step body ───────────────────────────────────────────────────────────── */
 .step-body {
@@ -477,27 +477,27 @@ function onSubmit() {
 .step-intro h3 {
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--c-text);
   margin: 0;
 }
 
 .step-intro p {
   font-size: 13px;
-  color: #64748b;
+  color: var(--c-text-2);
   margin: 0;
 }
 
 .field-hint {
   margin-top: 8px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--c-text-3);
 }
 
 .parent-avatar {
   width: 24px;
   height: 24px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, var(--c-indigo), var(--c-indigo-d));
   color: #fff;
   display: inline-flex;
   align-items: center;
@@ -511,8 +511,8 @@ function onSubmit() {
 
 /* ── Review card ─────────────────────────────────────────────────────────── */
 .review-card {
-  background: rgba(248, 250, 252, 0.9);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: 14px;
   padding: 20px;
   display: flex;
@@ -529,7 +529,7 @@ function onSubmit() {
 .review-label {
   font-size: 12px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--c-text-2);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   min-width: 100px;
@@ -539,12 +539,12 @@ function onSubmit() {
 .review-value {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--c-text);
 }
 
 .review-long {
   font-weight: 400;
-  color: #475569;
+  color: var(--c-text-2);
   line-height: 1.5;
 }
 
@@ -555,8 +555,8 @@ function onSubmit() {
   padding: 3px 10px;
 }
 
-.access-pill.is-public  { background: #dcfce7; color: #166534; }
-.access-pill.is-private { background: #fef9c3; color: #854d0e; }
+.access-pill.is-public  { background: var(--c-badge-green-bg); color: var(--c-badge-green-text); }
+.access-pill.is-private { background: var(--c-badge-yellow-bg); color: var(--c-badge-yellow-text); }
 
 /* ── Step navigation ─────────────────────────────────────────────────────── */
 .step-nav {
@@ -564,7 +564,7 @@ function onSubmit() {
   align-items: center;
   gap: 8px;
   padding-top: 8px;
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  border-top: 1px solid var(--c-border);
 }
 
 .cancel-btn {

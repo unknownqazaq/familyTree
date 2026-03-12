@@ -65,14 +65,14 @@ function selectPerson(person) {
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--c-bg-2);
+  border: 1px solid var(--c-border);
   border-top: none;
   border-radius: 0 0 4px 4px;
   max-height: 200px;
   overflow-y: auto;
   z-index: 100;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px var(--c-shadow);
 }
 
 .search-item {
@@ -82,6 +82,6 @@ function selectPerson(person) {
 }
 
 .search-item:hover {
-  background-color: #f0f4f8;
+  background-color: var(--c-fill-3);
 }
 </style>
