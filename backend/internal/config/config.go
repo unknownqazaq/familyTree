@@ -22,6 +22,7 @@ type Config struct {
 	JWTRefreshExpiry time.Duration
 
 	ServerPort string
+	BackupDir  string
 }
 
 func Load() (*Config, error) {
@@ -41,13 +42,14 @@ func Load() (*Config, error) {
 		DBHost:          getEnv("POSTGRES_HOST", "localhost"),
 		DBPort:          getEnv("POSTGRES_PORT", "5432"),
 		DBUser:          getEnv("POSTGRES_USER", "familytree"),
-		DBPassword:      getEnv("POSTGRES_PASSWORD", "familytree_secret_2024"),
+		DBPassword:      getEnv("POSTGRES_PASSWORD", ""),
 		DBName:          getEnv("POSTGRES_DB", "familytree"),
 		DBSSLMode:       getEnv("DB_SSLMODE", "disable"),
-		JWTSecret:       getEnv("JWT_SECRET", "default-secret-change-me"),
+		JWTSecret:       getEnv("JWT_SECRET", ""),
 		JWTExpiry:       jwtExpiry,
 		JWTRefreshExpiry: jwtRefreshExpiry,
 		ServerPort:      getEnv("PORT", getEnv("SERVER_PORT", "8080")),
+		BackupDir:       getEnv("BACKUP_DIR", "/app/backups"),
 	}
 
 	cfg.DBDSN = fmt.Sprintf(

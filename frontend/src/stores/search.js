@@ -5,31 +5,25 @@ import api from '../api'
 export const useSearchStore = defineStore('search', () => {
   const results = ref([])
   const query   = ref('')
-  const total   = ref(0)
-  const page    = ref(1)
-  const pages   = ref(0)
   const loading = ref(false)
   const error   = ref(null)
 
-  async function search({ q, page: p = 1, sort = 'relevance', access = '' } = {}) {
+  async function search(q) {
+    if (!q || q.length < 2) {
+      results.value = []
+      return
+    }
+
     query.value   = q
     loading.value = true
     error.value   = null
 
     try {
-      const params = { q, page: p, limit: 20 }
-      if (sort)   params.sort   = sort
-      if (access) params.access = access
-
-      const { data } = await api.get('/search', { params })
-      results.value = data.results || []
-      total.value   = data.total   || 0
-      page.value    = data.page    || p
-      pages.value   = data.pages   || 0
+      const { data } = await api.get('/persons/search', { params: { q } })
+      results.value = Array.isArray(data) ? data : []
     } catch (e) {
       error.value   = e.response?.data?.error || 'Search failed'
       results.value = []
-      total.value   = 0
     } finally {
       loading.value = false
     }
@@ -38,11 +32,8 @@ export const useSearchStore = defineStore('search', () => {
   function reset() {
     results.value = []
     query.value   = ''
-    total.value   = 0
-    page.value    = 1
-    pages.value   = 0
     error.value   = null
   }
 
-  return { results, query, total, page, pages, loading, error, search, reset }
+  return { results, query, loading, error, search, reset }
 })

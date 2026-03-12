@@ -27,21 +27,20 @@ func NewBackupService(cfg *config.Config) *BackupService {
 }
 
 func (s *BackupService) CreateBackup() (*BackupInfo, error) {
-	backupDir := "/app/backups"
-	if err := os.MkdirAll(backupDir, 0755); err != nil {
+	if err := os.MkdirAll(s.cfg.BackupDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create backup directory: %w", err)
 	}
 
 	timestamp := time.Now().Format("2006-01-02_15-04-05")
 	filename := fmt.Sprintf("backup_%s.sql", timestamp)
-	filepath := filepath.Join(backupDir, filename)
+	dest := filepath.Join(s.cfg.BackupDir, filename)
 
 	cmd := exec.Command("pg_dump",
 		"-h", s.cfg.DBHost,
 		"-p", s.cfg.DBPort,
 		"-U", s.cfg.DBUser,
 		"-d", s.cfg.DBName,
-		"-f", filepath,
+		"-f", dest,
 	)
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", s.cfg.DBPassword))
 
@@ -49,7 +48,7 @@ func (s *BackupService) CreateBackup() (*BackupInfo, error) {
 		return nil, fmt.Errorf("pg_dump failed: %s, %w", string(output), err)
 	}
 
-	info, err := os.Stat(filepath)
+	info, err := os.Stat(dest)
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +61,7 @@ func (s *BackupService) CreateBackup() (*BackupInfo, error) {
 }
 
 func (s *BackupService) ListBackups() ([]BackupInfo, error) {
-	backupDir := "/app/backups"
-	entries, err := os.ReadDir(backupDir)
+	entries, err := os.ReadDir(s.cfg.BackupDir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return []BackupInfo{}, nil
@@ -95,10 +93,15 @@ func (s *BackupService) ListBackups() ([]BackupInfo, error) {
 }
 
 func (s *BackupService) Restore(filename string) error {
-	backupDir := "/app/backups"
-	filepath := filepath.Join(backupDir, filename)
+	// Prevent path traversal
+	clean := filepath.Base(filename)
+	if clean != filename {
+		return fmt.Errorf("invalid backup filename: %s", filename)
+	}
 
-	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+	dest := filepath.Join(s.cfg.BackupDir, clean)
+
+	if _, err := os.Stat(dest); os.IsNotExist(err) {
 		return fmt.Errorf("backup file not found: %s", filename)
 	}
 
@@ -107,7 +110,7 @@ func (s *BackupService) Restore(filename string) error {
 		"-p", s.cfg.DBPort,
 		"-U", s.cfg.DBUser,
 		"-d", s.cfg.DBName,
-		"-f", filepath,
+		"-f", dest,
 	)
 	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", s.cfg.DBPassword))
 

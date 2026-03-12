@@ -8,40 +8,22 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search by name, clan, or region..."
+          :placeholder="t('search.personsPlaceholder')"
           class="search-input"
           @keydown.enter="handleSearch"
         />
-        <button v-if="searchQuery" class="clear-btn" @click="clearSearch">✕</button>
+        <button v-if="searchQuery" class="clear-btn" @click="clearSearch">&#10005;</button>
       </div>
     </div>
 
     <div v-if="searchStore.query" class="results-header">
-      <h3 class="results-title">Results for "{{ searchStore.query }}"</h3>
-      <span class="results-count">· {{ searchStore.total }} records found</span>
-    </div>
-
-    <div class="filter-bar">
-      <div class="filter-group">
-        <label class="filter-label">Sort:</label>
-        <select v-model="filters.sort" class="filter-select" @change="handleFilterChange">
-          <option value="relevance">Relevance</option>
-          <option value="recent">Most Recent</option>
-          <option value="name">Name A–Z</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Access:</label>
-        <select v-model="filters.access" class="filter-select" @change="handleFilterChange">
-          <option value="">All</option>
-          <option value="public">Public Only</option>
-        </select>
-      </div>
+      <h3 class="results-title">{{ t('search.resultsFor') }} "{{ searchStore.query }}"</h3>
+      <span class="results-count">&middot; {{ searchStore.results.length }} {{ t('search.recordsFound') }}</span>
     </div>
 
     <div v-if="searchStore.loading" class="loading-state">
       <div class="spinner"></div>
-      <span>Searching...</span>
+      <span>{{ t('common.loading') }}</span>
     </div>
 
     <div v-else-if="searchStore.results.length > 0" class="results-list">
@@ -56,30 +38,23 @@
       v-else-if="searchStore.query && !searchStore.loading"
       :query="searchStore.query"
     />
-
-    <Pagination
-      v-if="searchStore.pages > 1"
-      :current="searchStore.page"
-      :total="searchStore.pages"
-      @change="handlePageChange"
-    />
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useSearchStore } from '../stores/search'
 import SearchResultCard from '../components/search/SearchResultCard.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
-import Pagination from '../components/ui/Pagination.vue'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const searchStore = useSearchStore()
 
 const searchQuery = ref(route.query.q || '')
-const filters = ref({ sort: 'relevance', access: '' })
 
 function handleSearch() {
   if (!searchQuery.value.trim()) return
@@ -91,33 +66,20 @@ function clearSearch() {
   searchStore.reset()
 }
 
-function handleFilterChange() {
-  doSearch(1)
-}
-
-function handlePageChange(page) {
-  doSearch(page)
-}
-
-function doSearch(page = 1) {
+function doSearch() {
   if (!searchQuery.value.trim()) return
-  searchStore.search({
-    q: searchQuery.value,
-    page,
-    sort: filters.value.sort,
-    access: filters.value.access,
-  })
+  searchStore.search(searchQuery.value)
 }
 
 watch(() => route.query.q, (q) => {
   if (q) {
     searchQuery.value = q
-    doSearch(1)
+    doSearch()
   }
 })
 
 onMounted(() => {
-  if (searchQuery.value) doSearch(1)
+  if (searchQuery.value) doSearch()
 })
 </script>
 
@@ -171,30 +133,6 @@ onMounted(() => {
 }
 .results-title { font-size: 18px; font-weight: 600; color: #1C2833; }
 .results-count { font-size: 14px; color: #5D6D7E; }
-
-.filter-bar {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  background: #F4F6F7;
-  border-radius: 8px;
-  padding: 8px 16px;
-  margin-bottom: 20px;
-}
-
-.filter-group { display: flex; align-items: center; gap: 8px; }
-
-.filter-label { font-size: 13px; color: #5D6D7E; white-space: nowrap; }
-
-.filter-select {
-  border: 1px solid #D5D8DC;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 13px;
-  background: #fff;
-  color: #2C3E50;
-  cursor: pointer;
-}
 
 .loading-state {
   display: flex;

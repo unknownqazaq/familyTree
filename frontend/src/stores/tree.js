@@ -4,8 +4,6 @@ import api from '../api'
 
 export const useTreeStore = defineStore('tree', () => {
   const persons = ref([])
-  const currentPerson = ref(null)
-  const treeData = ref(null)
   const pathResult = ref(null)
   const searchResults = ref([])
   const loading = ref(false)
@@ -122,25 +120,11 @@ export const useTreeStore = defineStore('tree', () => {
     return loadingNodeIds.value.has(nodeId)
   }
 
-  async function fetchTree(personId) {
-    loading.value = true
-    error.value = null
-    try {
-      const { data } = await api.get(`/tree/${personId}`)
-      treeData.value = data
-    } catch (e) {
-      error.value = e.response?.data?.error || 'Failed to load tree'
-    } finally {
-      loading.value = false
-    }
-  }
-
   async function fetchPerson(id) {
     loading.value = true
     error.value = null
     try {
       const { data } = await api.get(`/persons/${id}`)
-      currentPerson.value = data
       return data
     } catch (e) {
       error.value = e.response?.data?.error || 'Failed to load person'
@@ -199,8 +183,6 @@ export const useTreeStore = defineStore('tree', () => {
 
   return {
     persons,
-    currentPerson,
-    treeData,
     pathResult,
     searchResults,
     loading,
@@ -209,7 +191,6 @@ export const useTreeStore = defineStore('tree', () => {
     loadedParentIds,
     fetchRoots,
     fetchFullTree,
-    fetchTree,
     fetchPerson,
     fetchNodeChildren,
     isNodeLoading,
