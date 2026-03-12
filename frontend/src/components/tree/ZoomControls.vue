@@ -1,4 +1,5 @@
 <template>
+  <Teleport to="body">
   <div class="zoom-controls">
     <button class="ctrl-btn" title="Zoom In" @click="emit('zoom-in')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -28,6 +29,7 @@
       </svg>
     </button>
   </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -36,7 +38,7 @@ const emit = defineEmits(['zoom-in', 'zoom-out', 'fit', 'reset'])
 
 <style scoped>
 .zoom-controls {
-  position: absolute;
+  position: fixed;
   bottom: 20px;
   right: 20px;
   display: flex;
@@ -49,7 +51,7 @@ const emit = defineEmits(['zoom-in', 'zoom-out', 'fit', 'reset'])
   box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 0 0 0.5px var(--border, rgba(255,255,255,0.08));
   padding: 4px;
   gap: 2px;
-  z-index: 10;
+  z-index: 9999;
 }
 
 .ctrl-btn {
@@ -73,4 +75,12 @@ const emit = defineEmits(['zoom-in', 'zoom-out', 'fit', 'reset'])
 }
 
 .divider { height: 1px; background: var(--border, rgba(255, 255, 255, 0.08)); margin: 2px 4px; }
+
+/* Light theme — variables don't cascade through Teleport */
+[data-theme="light"] .zoom-controls {
+  --panel2: rgba(255, 255, 255, 0.98);
+  --panel: rgba(255, 255, 255, 0.85);
+  --border: rgba(60, 60, 67, 0.18);
+  --text: #000000;
+}
 </style>
