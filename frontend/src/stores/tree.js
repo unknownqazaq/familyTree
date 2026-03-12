@@ -148,6 +148,32 @@ export const useTreeStore = defineStore('tree', () => {
     await api.delete(`/persons/${id}`)
   }
 
+  /**
+   * Ensure a person and all their ancestors are loaded in the store.
+   * Walks up the parent_id chain until reaching a root or an already-loaded node.
+   */
+  async function loadAncestorChain(personId) {
+    const existingIds = new Set(persons.value.map((p) => p.id))
+    const toAdd = []
+    let currentId = personId
+
+    while (currentId != null && !existingIds.has(currentId)) {
+      try {
+        const { data } = await api.get(`/persons/${currentId}`)
+        if (!data) break
+        toAdd.push(data)
+        existingIds.add(data.id)
+        currentId = data.parent_id
+      } catch {
+        break
+      }
+    }
+
+    if (toAdd.length > 0) {
+      persons.value = [...persons.value, ...toAdd]
+    }
+  }
+
   async function searchPersons(query) {
     if (!query || query.length < 2) {
       searchResults.value = []
@@ -200,6 +226,7 @@ export const useTreeStore = defineStore('tree', () => {
     createPerson,
     updatePerson,
     deletePerson,
+    loadAncestorChain,
     searchPersons,
     findPath,
     getChildren,

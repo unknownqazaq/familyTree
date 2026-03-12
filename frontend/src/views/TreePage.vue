@@ -97,7 +97,7 @@ onMounted(async () => {
     const person = await treeStore.fetchPerson(id)
     if (person) {
       selectedPerson.value = person
-      // Expand and focus the node once the tree is ready
+      await treeStore.loadAncestorChain(id)
       treeViewRef.value?.expandToNode(id)
     }
   }
@@ -110,11 +110,10 @@ async function onNodeClick(nodeId) {
   }
 }
 
-function onSearchSelect(person) {
+async function onSearchSelect(person) {
   selectedPerson.value = person
-  // Pan / expand to node instead of navigating away
+  await treeStore.loadAncestorChain(person.id)
   treeViewRef.value?.expandToNode(person.id)
-  // Update URL without triggering full navigation
   router.replace({ name: 'tree-person', params: { id: person.id } })
 }
 
