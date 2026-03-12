@@ -18,6 +18,13 @@ frontend:
 
 # Tests
 test:
+	cd backend && go test ./...
+	cd frontend && npm test
+
+test-backend:
+	cd backend && go test ./...
+
+test-frontend:
 	cd frontend && npm test
 
 test-watch:

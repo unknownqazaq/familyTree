@@ -1,0 +1,6 @@
+**/*_test.go
+**/*.test
+.git
+.gitignore
+.env
+*.md
