@@ -30,6 +30,9 @@ function makeTreeStore({ createOk = true, updateOk = true, deleteOk = true } = {
     deletePerson: deleteOk
       ? vi.fn().mockResolvedValue()
       : vi.fn().mockRejectedValue({ response: { status: 403, data: {} } }),
+    addPersonToStore: vi.fn(),
+    updatePersonInStore: vi.fn(),
+    removePersonFromStore: vi.fn(),
     fetchFullTree: vi.fn().mockResolvedValue(),
   }
 }
@@ -231,18 +234,11 @@ describe('parentOptions', () => {
 describe('submitPersonForm (add)', () => {
   it('creates person and emits node-click on success', async () => {
     const ctx = makeContext()
-    const { openAddModal, submitPersonForm } = useTreeViewModal(ctx)
+    const { openAddModal, formState, submitPersonForm } = useTreeViewModal(ctx)
 
     openAddModal(1)
-    ctx.treeStore.createPerson = vi.fn().mockResolvedValue({ id: 99 })
-
-    // Set required name field
-    const { formState } = useTreeViewModal(ctx)   // same composable, re-instantiated
-    // Use the one from the original context
-    const modal = useTreeViewModal(ctx)
-    modal.openAddModal(1)
-    modal.formState.name = 'New Person'
-    await modal.submitPersonForm()
+    formState.name = 'New Person'
+    await submitPersonForm()
 
     expect(ctx.treeStore.createPerson).toHaveBeenCalled()
     expect(ctx.emit).toHaveBeenCalledWith('node-click', 99)
