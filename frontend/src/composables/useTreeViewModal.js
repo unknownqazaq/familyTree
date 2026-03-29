@@ -25,6 +25,8 @@ export function useTreeViewModal({
   const activeNodeId = ref(null)
   const mutationLoading = ref(false)
   const mutationError = ref('')
+  const existingAddChildren = ref([])
+  const existingAddChildrenLoading = ref(false)
 
   const formState = reactive({
     name: '',
@@ -115,6 +117,20 @@ export function useTreeViewModal({
     resetFormState()
     formState.parent_id = String(nodeId)
     formState.access = 'public'
+
+    // Fetch existing children to help user avoid duplicates
+    existingAddChildren.value = []
+    existingAddChildrenLoading.value = true
+    treeStore.getChildren(nodeId)
+      .then((children) => {
+        existingAddChildren.value = Array.isArray(children) ? children : []
+      })
+      .catch(() => {
+        existingAddChildren.value = []
+      })
+      .finally(() => {
+        existingAddChildrenLoading.value = false
+      })
   }
 
   function openEditModal(nodeId) {
@@ -224,6 +240,8 @@ export function useTreeViewModal({
     activeNodeId,
     mutationLoading,
     mutationError,
+    existingAddChildren,
+    existingAddChildrenLoading,
     // computed
     activePerson,
     activeChildrenCount,

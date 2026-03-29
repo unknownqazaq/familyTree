@@ -117,6 +117,8 @@ const messages = {
       deleteFailed: 'Failed to delete person',
       forbidden: 'You are not allowed to perform this action',
       validationError: 'Please fill required fields and choose a valid parent.',
+      existingChildrenLabel: 'Existing children:',
+      existingChildrenNone: 'None yet',
     },
     path: {
       title: 'Path',
@@ -346,6 +348,8 @@ const messages = {
       deleteFailed: 'Не удалось удалить человека',
       forbidden: 'Недостаточно прав для этого действия',
       validationError: 'Заполните обязательные поля и выберите корректного родителя.',
+      existingChildrenLabel: 'Существующие дети:',
+      existingChildrenNone: 'Пока нет',
     },
     path: {
       title: 'Путь',
@@ -575,6 +579,8 @@ const messages = {
       deleteFailed: 'Адамды жою мүмкін болмады',
       forbidden: 'Бұл әрекетке рұқсатыңыз жоқ',
       validationError: 'Міндетті өрістерді толтырыңыз және дұрыс ата-ананы таңдаңыз.',
+      existingChildrenLabel: 'Бар балалар:',
+      existingChildrenNone: 'Әзірге жоқ',
     },
     path: {
       title: 'Жол',

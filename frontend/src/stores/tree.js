@@ -35,12 +35,17 @@ export const useTreeStore = defineStore('tree', () => {
   /** Add a newly created person optimistically and invalidate its parent's loaded cache. */
   function addPersonToStore(person) {
     if (!person || persons.value.some((p) => p.id === person.id)) return
-    persons.value = [...persons.value, person]
+    let updated = [...persons.value, person]
     if (person.parent_id != null) {
       const next = new Set(loadedParentIds.value)
       next.delete(person.parent_id)
       loadedParentIds.value = next
+      // Mark the parent as having children so the expand button appears immediately
+      updated = updated.map((p) =>
+        p.id === person.parent_id ? { ...p, has_children: true } : p,
+      )
     }
+    persons.value = updated
   }
 
   /** Replace a person in-place after an update, preserving has_children. */
