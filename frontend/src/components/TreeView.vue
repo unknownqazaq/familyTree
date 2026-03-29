@@ -91,6 +91,15 @@
         <h4 v-else>{{ t('treeMap.deleteTitle') }}</h4>
 
         <form v-if="modalState === 'add' || modalState === 'edit'" class="modal-form" @submit.prevent="submitPersonForm">
+          <div v-if="modalState === 'add'" class="existing-children-section">
+            <p class="existing-children-label">{{ t('treeMap.existingChildrenLabel') }}</p>
+            <span v-if="existingAddChildrenLoading" class="existing-children-info">{{ t('common.saving') }}</span>
+            <ul v-else-if="existingAddChildren.length" class="existing-children-list">
+              <li v-for="child in existingAddChildren" :key="child.id">{{ child.name }}</li>
+            </ul>
+            <span v-else class="existing-children-info">{{ t('treeMap.existingChildrenNone') }}</span>
+          </div>
+
           <div class="form-label">
             <label for="modal-name">{{ t('treeMap.nameLabel') }}</label>
             <input id="modal-name" name="name" v-model="formState.name" type="text" required />
@@ -282,7 +291,8 @@ const modal = useTreeViewModal({
   expandToNode,
 })
 const { modalState, formState, parentOptions, activePerson, activeChildrenCount,
-        mutationLoading, mutationError, closeModal, submitPersonForm, confirmDelete } = modal
+        mutationLoading, mutationError, closeModal, submitPersonForm, confirmDelete,
+        existingAddChildren, existingAddChildrenLoading } = modal
 
 // ─── Scene styles ─────────────────────────────────────────────────────────────
 const sceneStyle = computed(() => ({
@@ -968,6 +978,36 @@ defineExpose({ focusNode, expandToNode, selectNode: handleSelectNode })
 
 .modal-error {
   margin-top: 10px;
+}
+
+.existing-children-section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--panel);
+}
+
+.existing-children-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+}
+
+.existing-children-info {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.existing-children-list {
+  margin: 0;
+  padding: 0 0 0 16px;
+  list-style: disc;
+  color: var(--text);
+  font-size: 13px;
+  display: grid;
+  gap: 2px;
 }
 
 @media (max-width: 1080px) {

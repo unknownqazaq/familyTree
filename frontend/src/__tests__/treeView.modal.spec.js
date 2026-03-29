@@ -30,6 +30,7 @@ function makeTreeStore({ createOk = true, updateOk = true, deleteOk = true } = {
     deletePerson: deleteOk
       ? vi.fn().mockResolvedValue()
       : vi.fn().mockRejectedValue({ response: { status: 403, data: {} } }),
+    getChildren: vi.fn().mockResolvedValue([]),
     addPersonToStore: vi.fn(),
     updatePersonInStore: vi.fn(),
     removePersonFromStore: vi.fn(),

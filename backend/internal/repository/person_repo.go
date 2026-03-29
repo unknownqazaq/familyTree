@@ -31,6 +31,10 @@ func (r *PersonRepository) GetByID(id int) (*models.Person, error) {
 	if err != nil {
 		return nil, err
 	}
+	var count int
+	if err := r.db.Get(&count, "SELECT COUNT(*) FROM persons WHERE parent_id = $1", id); err == nil {
+		person.HasChildren = count > 0
+	}
 	return person, nil
 }
 
@@ -139,7 +143,11 @@ func (r *PersonRepository) GetRootsForUser(userID int) ([]models.Person, error) 
 func (r *PersonRepository) GetAllPublic() ([]models.Person, error) {
 	persons := []models.Person{}
 	err := r.db.Select(&persons, "SELECT * FROM persons WHERE access = 'public' ORDER BY id")
-	return persons, err
+	if err != nil {
+		return nil, err
+	}
+	r.setHasChildren(persons)
+	return persons, nil
 }
 
 func (r *PersonRepository) GetAllForUser(userID int) ([]models.Person, error) {
@@ -149,7 +157,11 @@ func (r *PersonRepository) GetAllForUser(userID int) ([]models.Person, error) {
 		WHERE access = 'public' OR created_by = $1
 			OR id IN (SELECT person_id FROM person_editors WHERE user_id = $1)
 		ORDER BY id`, userID)
-	return persons, err
+	if err != nil {
+		return nil, err
+	}
+	r.setHasChildren(persons)
+	return persons, nil
 }
 
 func (r *PersonRepository) GetPending() ([]models.Person, error) {
