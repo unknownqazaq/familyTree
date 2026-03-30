@@ -21,6 +21,7 @@ type PersonRepository interface {
 	GetAllForUser(userID int) ([]models.Person, error)
 	GetAll() ([]models.Person, error)
 	GetPending() ([]models.Person, error)
+	GetRecent(limit int) ([]models.Person, error)
 	Publish(id int) error
 	IsEditor(personID, userID int) (bool, error)
 	CanAccess(personID, userID int) (bool, error)
@@ -164,6 +165,14 @@ func (s *PersonService) GetChildren(parentID int) ([]models.Person, error) {
 // GetPending returns persons awaiting moderation.
 func (s *PersonService) GetPending() ([]models.Person, error) {
 	return s.repo.GetPending()
+}
+
+// GetRecent returns the most recently created persons.
+func (s *PersonService) GetRecent(limit int) ([]models.Person, error) {
+	if limit <= 0 || limit > 50 {
+		limit = 5
+	}
+	return s.repo.GetRecent(limit)
 }
 
 // Publish makes a person public.

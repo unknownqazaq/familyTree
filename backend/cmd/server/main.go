@@ -105,6 +105,7 @@ func main() {
 		{
 			admin.GET("/pending", adminHandler.GetPending)
 			admin.PUT("/publish/:id", adminHandler.Publish)
+			admin.GET("/recent-persons", adminHandler.GetRecentPersons)
 			admin.POST("/backup", adminHandler.CreateBackup)
 			admin.GET("/backups", adminHandler.ListBackups)
 			admin.POST("/restore/:name", adminHandler.Restore)

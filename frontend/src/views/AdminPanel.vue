@@ -2,6 +2,19 @@
   <div class="admin-panel">
     <h2>{{ t('admin.title') }}</h2>
 
+    <!-- Recent Additions -->
+    <div class="admin-section card">
+      <h3>🔔 {{ t('admin.recentTitle') }}</h3>
+      <p v-if="recentError" class="error-msg">{{ recentError }}</p>
+      <ul v-else-if="recentPersons.length > 0" class="recent-list">
+        <li v-for="person in recentPersons" :key="person.id" class="recent-item">
+          <span class="recent-name">{{ person.name }} <span class="recent-id">#{{ person.id }}</span></span>
+          <span class="recent-date">{{ t('admin.recentAdded') }}: {{ formatDate(person.created_at) }}</span>
+        </li>
+      </ul>
+      <p v-else class="empty-text">{{ t('admin.recentEmpty') }}</p>
+    </div>
+
     <div class="admin-section card">
       <h3>{{ t('admin.backupsTitle') }}</h3>
 
@@ -53,11 +66,24 @@ const backups = ref([])
 const backupLoading = ref(false)
 const backupMessage = ref('')
 const backupError = ref('')
-const { t } = useI18n()
+
+const recentPersons = ref([])
+const recentError = ref('')
+
+const { t, locale } = useI18n()
 
 onMounted(async () => {
-  await fetchBackups()
+  await Promise.all([fetchBackups(), fetchRecentPersons()])
 })
+
+async function fetchRecentPersons() {
+  try {
+    const { data } = await api.get('/admin/recent-persons?limit=5')
+    recentPersons.value = data || []
+  } catch {
+    recentError.value = t('admin.recentLoadFailed')
+  }
+}
 
 async function fetchBackups() {
   try {
@@ -99,6 +125,11 @@ function formatSize(bytes) {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+function formatDate(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleString(locale.value)
 }
 </script>
 
@@ -145,5 +176,39 @@ function formatSize(bytes) {
 .empty-text {
   color: var(--c-text-3);
   font-size: 14px;
+}
+
+.recent-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recent-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--c-border);
+  font-size: 14px;
+}
+
+.recent-item:last-child {
+  border-bottom: none;
+}
+
+.recent-name {
+  font-weight: 500;
+}
+
+.recent-id {
+  color: var(--c-text-3);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.recent-date {
+  color: var(--c-text-2);
+  font-size: 13px;
 }
 </style>

@@ -80,3 +80,15 @@ func (h *AdminHandler) Restore(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "database restored from backup"})
 }
+
+func (h *AdminHandler) GetRecentPersons(c *gin.Context) {
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "5"))
+
+	persons, err := h.personService.GetRecent(limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get recent persons"})
+		return
+	}
+
+	c.JSON(http.StatusOK, persons)
+}

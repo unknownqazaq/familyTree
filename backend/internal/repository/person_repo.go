@@ -198,3 +198,9 @@ func (r *PersonRepository) GetAll() ([]models.Person, error) {
 	err := r.db.Select(&persons, "SELECT * FROM persons ORDER BY id")
 	return persons, err
 }
+
+func (r *PersonRepository) GetRecent(limit int) ([]models.Person, error) {
+	persons := []models.Person{}
+	err := r.db.Select(&persons, "SELECT * FROM persons ORDER BY created_at DESC LIMIT $1", limit)
+	return persons, err
+}

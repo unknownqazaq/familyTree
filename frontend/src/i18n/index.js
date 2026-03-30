@@ -202,6 +202,10 @@ const messages = {
         actions: 'Actions',
       },
       empty: 'No backups yet',
+      recentTitle: 'Recent Additions',
+      recentAdded: 'Added',
+      recentLoadFailed: 'Failed to load recent persons',
+      recentEmpty: 'No persons added yet',
     },
     moderation: {
       title: 'Moderation Queue',
@@ -433,6 +437,10 @@ const messages = {
         actions: 'Действия',
       },
       empty: 'Резервных копий пока нет',
+      recentTitle: 'Последние добавления',
+      recentAdded: 'Добавлено',
+      recentLoadFailed: 'Не удалось загрузить последние записи',
+      recentEmpty: 'Записей пока нет',
     },
     moderation: {
       title: 'Очередь модерации',
@@ -664,6 +672,10 @@ const messages = {
         actions: 'Әрекеттер',
       },
       empty: 'Сақтық көшірмелер әлі жоқ',
+      recentTitle: 'Соңғы қосымшалар',
+      recentAdded: 'Қосылды',
+      recentLoadFailed: 'Соңғы жазбаларды жүктеу мүмкін болмады',
+      recentEmpty: 'Жазбалар әлі жоқ',
     },
     moderation: {
       title: 'Модерация кезегі',

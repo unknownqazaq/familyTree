@@ -80,6 +80,7 @@ func (m *mockPersonRepo) GetAllPublic() ([]models.Person, error)                
 func (m *mockPersonRepo) GetAllForUser(uid int) ([]models.Person, error)                      { return nil, nil }
 func (m *mockPersonRepo) GetAll() ([]models.Person, error)                                    { return nil, nil }
 func (m *mockPersonRepo) GetPending() ([]models.Person, error)                                { return nil, nil }
+func (m *mockPersonRepo) GetRecent(limit int) ([]models.Person, error)                        { return nil, nil }
 func (m *mockPersonRepo) Publish(id int) error                                                { return nil }
 
 // ─── Get ─────────────────────────────────────────────────────────────────────
